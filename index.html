@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>มอเตอร์ไฟฟ้ากระแสตรง 3D</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+  :root{
+    --panel:#14171a; --panel-2:#1d2226;
+    --brass:#b8874a; --brass-light:#e0b374; --cream:#f2e8d5;
+    --wireN:#c9432c; --wireS:#3f7fb0; --muted:#8b9096; --ink:#0c0e10;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; height:100%; background:#0c0e10; overflow:hidden; font-family:'Space Grotesk',sans-serif; }
+  #canvasWrap{ position:fixed; inset:0; }
+  canvas{ display:block; touch-action:none; }
+
+  .hud{
+    position:fixed; left:0; right:0; top:0;
+    padding:18px 18px 0; pointer-events:none;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.35em; color:var(--brass-light); text-transform:uppercase; }
+  h1{ font-family:'Bebas Neue',sans-serif; font-size:clamp(28px,7vw,42px); letter-spacing:.03em; margin:2px 0; color:var(--cream);
+      text-shadow:0 2px 20px rgba(0,0,0,.8); }
+  h1 span{ color:var(--brass-light); }
+  .sub{ font-size:12px; color:var(--muted); }
+
+  .panel{
+    position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+    width:min(560px,94vw);
+    background:rgba(20,23,26,.82); backdrop-filter:blur(10px);
+    border:1px solid #2c3238; border-radius:10px;
+    padding:14px 16px 16px;
+    box-shadow:0 20px 50px -15px rgba(0,0,0,.7);
+  }
+  .readout-row{ display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; margin-bottom:10px; }
+  .readout{ font-size:10.5px; color:var(--muted); text-align:center; }
+  .readout b{ display:block; font-size:17px; color:var(--brass-light); font-weight:600; }
+  .readout.dir b{ color:var(--wireN); }
+  .control label{ display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10.5px;
+      letter-spacing:.04em; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+  input[type=range]{ width:100%; -webkit-appearance:none; height:4px;
+      background:linear-gradient(90deg,var(--wireS),#3a4046 50%,var(--wireN)); border-radius:2px; outline:none; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:18px;height:18px;border-radius:50%;
+      background:radial-gradient(circle at 35% 30%,var(--brass-light),var(--brass) 70%); border:2px solid var(--ink); cursor:pointer; margin-top:-7px; }
+  input[type=range]::-moz-range-thumb{ width:18px;height:18px;border-radius:50%;
+      background:radial-gradient(circle at 35% 30%,var(--brass-light),var(--brass) 70%); border:2px solid var(--ink); cursor:pointer; }
+
+  .hint{ position:fixed; right:16px; bottom:16px; font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--muted);
+      background:rgba(20,23,26,.6); padding:6px 9px; border-radius:6px; border:1px solid #2c3238; pointer-events:none; }
+
+  .legend{
+    position:fixed; left:16px; top:100px; max-width:190px;
+    background:rgba(20,23,26,.7); border:1px solid #2c3238; border-radius:8px; padding:10px 12px;
+    font-size:10.5px; color:var(--muted); line-height:1.5; backdrop-filter:blur(6px);
+  }
+  .legend b{ color:var(--cream); }
+  .legend .dot{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; }
+  @media (max-width:680px){ .legend{ display:none; } }
+
+  #loading{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:#0c0e10; color:var(--brass-light); font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.1em; z-index:10;
+  }
+</style>
+</head>
+<body>
+
+<div id="loading">กำลังโหลดโมเดล 3 มิติ…</div>
+<div id="canvasWrap"></div>
+
+<div class="hud">
+  <div class="eyebrow">Realistic 3D Model</div>
+  <h1>มอเตอร์ไฟฟ้า<span>กระแสตรง</span></h1>
+  <div class="sub">DC Motor · ลากเมาส์/นิ้วเพื่อหมุนกล้อง</div>
+</div>
+
+<div class="legend">
+  <div><span class="dot" style="background:#c0392b"></span><b>ขั้ว N</b> ทาสีแดง</div>
+  <div><span class="dot" style="background:#2e6fb0"></span><b>ขั้ว S</b> ทาสีน้ำเงิน</div>
+  <div><span class="dot" style="background:#d98c3a"></span><b>ขดลวดทองแดง</b> (Armature)</div>
+  <div><span class="dot" style="background:#3a3a3a"></span><b>แปรงถ่าน</b> (Brush)</div>
+  <div><span class="dot" style="background:#c9a86a"></span><b>คอมมิวเทเตอร์</b> (Split-ring)</div>
+</div>
+
+<div class="panel">
+  <div class="readout-row">
+    <div class="readout">แรงดันไฟฟ้า<br><b id="voltVal">0.0 V</b></div>
+    <div class="readout dir">ทิศหมุน<br><b id="dirVal">หยุดนิ่ง</b></div>
+    <div class="readout">ความเร็วรอบ<br><b id="rpmVal">0 rpm</b></div>
+  </div>
+  <div class="control">
+    <label>แรงดันแบตเตอรี่ <span id="labelVal">0 V</span></label>
+    <input type="range" id="voltSlider" min="-6" max="6" step="0.2" value="3">
+  </div>
+</div>
+
+<div class="hint">ลาก = หมุนกล้อง · สไลเดอร์ = แรงดัน/ทิศหมุน</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const wrap = document.getElementById('canvasWrap');
+  const loading = document.getElementById('loading');
+
+  // ---------- Scene setup ----------
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0c0e10);
+  scene.fog = new THREE.Fog(0x0c0e10, 12, 28);
+
+  const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 0.1, 100);
+  const camDist = 13;
+  let camTheta = 0.55, camPhi = 1.15; // spherical angles
+  function updateCamera(){
+    camera.position.set(
+      camDist * Math.sin(camPhi) * Math.sin(camTheta),
+      camDist * Math.cos(camPhi) + 1.5,
+      camDist * Math.sin(camPhi) * Math.cos(camTheta)
+    );
+    camera.lookAt(0, 1.2, 0);
+  }
+  updateCamera();
+
+  const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  wrap.appendChild(renderer.domElement);
+
+  // ---------- Lighting ----------
+  const hemi = new THREE.HemisphereLight(0x9fb8ff, 0x1a1610, 0.55);
+  scene.add(hemi);
+
+  const key = new THREE.DirectionalLight(0xfff3dd, 1.6);
+  key.position.set(6, 9, 5);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024,1024);
+  key.shadow.camera.left = -8; key.shadow.camera.right = 8;
+  key.shadow.camera.top = 8; key.shadow.camera.bottom = -8;
+  scene.add(key);
+
+  const rim = new THREE.DirectionalLight(0x6fa8ff, 0.9);
+  rim.position.set(-6, 4, -6);
+  scene.add(rim);
+
+  const fill = new THREE.PointLight(0xffd9a0, 0.7, 20);
+  fill.position.set(0, 3, 6);
+  scene.add(fill);
+
+  // ---------- Materials ----------
+  const matBase = new THREE.MeshStandardMaterial({ color:0x1c2024, metalness:0.3, roughness:0.7 });
+  const matIron = new THREE.MeshStandardMaterial({ color:0x2b2f33, metalness:0.75, roughness:0.35 });
+  const matPoleN = new THREE.MeshStandardMaterial({ color:0xb8332a, metalness:0.4, roughness:0.4 });
+  const matPoleS = new THREE.MeshStandardMaterial({ color:0x2e6fb0, metalness:0.4, roughness:0.4 });
+  const matCopper = new THREE.MeshStandardMaterial({ color:0xd98c3a, metalness:0.85, roughness:0.28 });
+  const matBrass = new THREE.MeshStandardMaterial({ color:0xc9a86a, metalness:0.8, roughness:0.32 });
+  const matCarbon = new THREE.MeshStandardMaterial({ color:0x2a2a2a, metalness:0.2, roughness:0.8 });
+  const matChrome = new THREE.MeshStandardMaterial({ color:0xd8dde2, metalness:0.95, roughness:0.15 });
+  const matWireRed = new THREE.MeshStandardMaterial({ color:0xc0392b, metalness:0.1, roughness:0.6 });
+  const matWireBlack = new THREE.MeshStandardMaterial({ color:0x1a1a1a, metalness:0.1, roughness:0.6 });
+  const matPlastic = new THREE.MeshStandardMaterial({ color:0x24282c, metalness:0.1, roughness:0.5 });
+  const matBatteryBody = new THREE.MeshStandardMaterial({ color:0x3a4148, metalness:0.3, roughness:0.5 });
+
+  // ---------- Base plate ----------
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.8, 0.35, 64), matBase);
+  base.position.y = -0.18;
+  base.receiveShadow = true;
+  scene.add(base);
+  const baseRing = new THREE.Mesh(new THREE.TorusGeometry(4.6, 0.05, 12, 64), matBrass);
+  baseRing.rotation.x = Math.PI/2;
+  baseRing.position.y = 0.0;
+  scene.add(baseRing);
+
+  // ---------- Horseshoe magnet ----------
+  const magnetGroup = new THREE.Group();
+  // back curve (half torus)
+  const backCurve = new THREE.Mesh(
+    new THREE.TorusGeometry(1.6, 0.42, 20, 40, Math.PI),
+    matIron
+  );
+  backCurve.rotation.z = Math.PI;
+  backCurve.rotation.x = Math.PI/2;
+  backCurve.position.set(0, 1.9, -1.6);
+  backCurve.castShadow = true;
+  magnetGroup.add(backCurve);
+
+  function makePoleArm(xSign){
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.82, 1.9, 0.82), matIron);
+    arm.position.set(xSign*1.6, 0.95, -1.6);
+    arm.castShadow = true;
+    return arm;
+  }
+  magnetGroup.add(makePoleArm(-1));
+  magnetGroup.add(makePoleArm(1));
+
+  function makePoleTip(xSign, mat){
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.5, 0.86), mat);
+    tip.position.set(xSign*1.6, 0.25, -1.6);
+    tip.castShadow = true;
+    return tip;
+  }
+  magnetGroup.add(makePoleTip(-1, matPoleN));
+  magnetGroup.add(makePoleTip(1, matPoleS));
+
+  scene.add(magnetGroup);
+
+  // pole labels (simple flat discs w/ canvas texture)
+  function makeLabel(text, color){
+    const cvs = document.createElement('canvas');
+    cvs.width = 128; cvs.height = 128;
+    const ctx = cvs.getContext('2d');
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(64,64,60,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 72px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(text, 64, 70);
+    const tex = new THREE.CanvasTexture(cvs);
+    const mat = new THREE.MeshBasicMaterial({ map:tex, transparent:true });
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(0.4,0.4), mat);
+    return plane;
+  }
+  const labelN = makeLabel('N', '#b8332a');
+  labelN.position.set(-1.6, 0.25, -1.16);
+  scene.add(labelN);
+  const labelS = makeLabel('S', '#2e6fb0');
+  labelS.position.set(1.6, 0.25, -1.16);
+  scene.add(labelS);
+
+  // ---------- Rotor assembly (shaft + coil + commutator) ----------
+  const rotorPivot = new THREE.Group();
+  rotorPivot.position.set(0, 1.3, -1.0);
+  scene.add(rotorPivot);
+
+  // shaft
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,3.2,20), matChrome);
+  shaft.rotation.z = Math.PI/2;
+  shaft.position.set(0,0,0);
+  shaft.castShadow = true;
+  rotorPivot.add(shaft);
+
+  // shaft support stands
+  function makeStand(zPos){
+    const g = new THREE.Group();
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.5,1.3,0.35), matPlastic);
+    post.position.set(0, -0.65, 0);
+    post.castShadow = true;
+    g.add(post);
+    const collar = new THREE.Mesh(new THREE.TorusGeometry(0.14,0.05,10,20), matChrome);
+    collar.rotation.y = Math.PI/2;
+    g.add(collar);
+    g.position.set(0, 1.3, zPos);
+    return g;
+  }
+  scene.add(makeStand(0.55));
+  scene.add(makeStand(-2.55));
+
+  // coil (rectangular loop) — build from tube-like boxes around rotorPivot local z axis... 
+  // We'll orient loop so its plane rotates about X (shaft) axis.
+  const coilGroup = new THREE.Group();
+  const coilW = 1.5, coilH = 1.9, wireR = 0.045;
+  function wireSeg(len, axis){
+    const geo = new THREE.CylinderGeometry(wireR, wireR, len, 12);
+    const m = new THREE.Mesh(geo, matCopper);
+    m.castShadow = true;
+    if(axis === 'x'){ m.rotation.z = Math.PI/2; }
+    return m;
+  }
+  // two long sides parallel to shaft (x-axis), two short ends
+  const sideTop = wireSeg(coilW, 'x');
+  sideTop.position.set(0, coilH/2, 0);
+  const sideBot = wireSeg(coilW, 'x');
+  sideBot.position.set(0, -coilH/2, 0);
+  coilGroup.add(sideTop, sideBot);
+
+  function endSeg(){
+    const geo = new THREE.TorusGeometry(coilH/2, wireR, 10, 24, Math.PI);
+    const m = new THREE.Mesh(geo, matCopper);
+    m.castShadow = true;
+    m.rotation.y = Math.PI/2;
+    m.rotation.z = Math.PI/2;
+    return m;
+  }
+  const endA = endSeg(); endA.position.set(coilW/2, 0, 0);
+  const endB = endSeg(); endB.rotation.z = -Math.PI/2; endB.position.set(-coilW/2, 0, 0);
+  coilGroup.add(endA, endB);
+  rotorPivot.add(coilGroup);
+
+  // commutator (split ring) sits at one end of shaft
+  const commGroup = new THREE.Group();
+  commGroup.position.set(1.75, 0, 0);
+  const commHalfA = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.16,0.16,0.35, 24, 1, false, 0, Math.PI - 0.06),
+    matBrass
+  );
+  commHalfA.rotation.x = Math.PI/2;
+  const commHalfB = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.16,0.16,0.35, 24, 1, false, Math.PI + 0.06, Math.PI - 0.06),
+    matIron
+  );
+  commHalfB.rotation.x = Math.PI/2;
+  commGroup.add(commHalfA, commHalfB);
+  rotorPivot.add(commGroup);
+
+  // ---------- Brushes (fixed, touching commutator) ----------
+  function makeBrush(yOff){
+    const g = new THREE.Group();
+    const block = new THREE.Mesh(new THREE.BoxGeometry(0.12,0.32,0.16), matCarbon);
+    block.castShadow = true;
+    g.add(block);
+    const holder = new THREE.Mesh(new THREE.BoxGeometry(0.16,0.1,0.2), matChrome);
+    holder.position.y = 0.21;
+    g.add(holder);
+    g.position.set(1.75, yOff, 0);
+    return g;
+  }
+  const brushTop = makeBrush(0.42);
+  const brushBot = makeBrush(-0.42);
+  scene.add(brushTop, brushBot);
+
+  // spark indicator at brush-commutator gap
+  const sparkGeo = new THREE.SphereGeometry(0.05, 8, 8);
+  const sparkMat = new THREE.MeshBasicMaterial({ color:0xffd166, transparent:true, opacity:0 });
+  const sparkMesh = new THREE.Mesh(sparkGeo, sparkMat);
+  sparkMesh.position.set(1.75+0.16, 1.3, -1.0);
+  scene.add(sparkMesh);
+  const sparkLight = new THREE.PointLight(0xffd166, 0, 3);
+  sparkLight.position.copy(sparkMesh.position);
+  scene.add(sparkLight);
+
+  // ---------- Battery + wires ----------
+  const battGroup = new THREE.Group();
+  const battBody = new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,1.1,20), matBatteryBody);
+  battBody.rotation.z = Math.PI/2;
+  battBody.castShadow = true;
+  battGroup.add(battBody);
+  const battCapPos = new THREE.Mesh(new THREE.CylinderGeometry(0.31,0.31,0.12,20), matChrome);
+  battCapPos.rotation.z = Math.PI/2; battCapPos.position.x = 0.55;
+  battGroup.add(battCapPos);
+  const battCapNeg = battCapPos.clone(); battCapNeg.position.x = -0.55;
+  battGroup.add(battCapNeg);
+  battGroup.position.set(0, 0.35, 2.6);
+  scene.add(battGroup);
+
+  // wire helper: simple tube along path
+  function wirePath(points, mat, radius=0.035){
+    const curve = new THREE.CatmullRomCurve3(points);
+    const geo = new THREE.TubeGeometry(curve, 32, radius, 8, false);
+    const m = new THREE.Mesh(geo, mat);
+    m.castShadow = true;
+    return m;
+  }
+  const wireToTop = wirePath([
+    new THREE.Vector3(0.55,0.35,2.6),
+    new THREE.Vector3(1.0,0.35,2.2),
+    new THREE.Vector3(1.75,0.6,1.3),
+    new THREE.Vector3(1.75,0.72,0.42)
+  ], matWireRed);
+  scene.add(wireToTop);
+  const wireToBot = wirePath([
+    new THREE.Vector3(-0.55,0.35,2.6),
+    new THREE.Vector3(-1.0,0.35,2.2),
+    new THREE.Vector3(1.75,0.9,-1.35),
+    new THREE.Vector3(1.75,0.72,-0.42)
+  ], matWireBlack);
+  scene.add(wireToBot);
+
+  // ---------- Ground contact shadow catcher ----------
+  const shadowFloor = new THREE.Mesh(
+    new THREE.PlaneGeometry(40,40),
+    new THREE.ShadowMaterial({ opacity:0.35 })
+  );
+  shadowFloor.rotation.x = -Math.PI/2;
+  shadowFloor.position.y = -0.36;
+  shadowFloor.receiveShadow = true;
+  scene.add(shadowFloor);
+
+  // ---------- Interaction: drag to rotate camera ----------
+  let dragging = false, lastX=0, lastY=0, autoRotate=true, idleTimer=0;
+  function onDown(x,y){ dragging=true; lastX=x; lastY=y; autoRotate=false; idleTimer=0; }
+  function onMove(x,y){
+    if(!dragging) return;
+    const dx = x-lastX, dy = y-lastY;
+    camTheta -= dx*0.006;
+    camPhi = Math.min(2.4, Math.max(0.4, camPhi - dy*0.006));
+    lastX=x; lastY=y;
+  }
+  function onUp(){ dragging=false; }
+
+  renderer.domElement.addEventListener('mousedown', e=>onDown(e.clientX,e.clientY));
+  window.addEventListener('mousemove', e=>onMove(e.clientX,e.clientY));
+  window.addEventListener('mouseup', onUp);
+  renderer.domElement.addEventListener('touchstart', e=>{ const t=e.touches[0]; onDown(t.clientX,t.clientY); }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', e=>{ const t=e.touches[0]; onMove(t.clientX,t.clientY); }, {passive:true});
+  renderer.domElement.addEventListener('touchend', onUp);
+
+  window.addEventListener('resize', ()=>{
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // ---------- Voltage / rotation logic ----------
+  const slider = document.getElementById('voltSlider');
+  const voltVal = document.getElementById('voltVal');
+  const dirVal = document.getElementById('dirVal');
+  const rpmVal = document.getElementById('rpmVal');
+  const labelVal = document.getElementById('labelVal');
+
+  let angSpeed = 0; // rad per frame
+
+  function updateReadout(){
+    const v = parseFloat(slider.value);
+    voltVal.textContent = v.toFixed(1) + ' V';
+    labelVal.textContent = v.toFixed(1) + ' V';
+    const target = (v/6) * 0.09;
+    angSpeed += (target - angSpeed) * 0.05;
+
+    if (Math.abs(angSpeed) < 0.002){ dirVal.textContent = 'หยุดนิ่ง'; }
+    else if (angSpeed > 0){ dirVal.textContent = 'ตามเข็ม →'; }
+    else { dirVal.textContent = '← ทวนเข็ม'; }
+    rpmVal.textContent = Math.round(Math.abs(angSpeed) * 1050) + ' rpm';
+  }
+  slider.addEventListener('input', updateReadout);
+
+  // ---------- Animate ----------
+  let rotorAngle = 0;
+  function animate(){
+    requestAnimationFrame(animate);
+
+    updateReadout();
+    rotorAngle += angSpeed;
+    rotorPivot.rotation.x = rotorAngle;
+
+    // spark flash roughly every half turn
+    const norm = ((rotorAngle % Math.PI) + Math.PI) % Math.PI;
+    const nearGap = Math.abs(angSpeed) > 0.003 && (norm < 0.08 || norm > Math.PI-0.08);
+    sparkMat.opacity += ((nearGap?0.9:0) - sparkMat.opacity)*0.4;
+    sparkLight.intensity = sparkMat.opacity*1.5;
+
+    if(!dragging && autoRotate){ camTheta += 0.0018; }
+    if(!dragging){
+      idleTimer++;
+      if(idleTimer > 260) autoRotate = true;
+    }
+    updateCamera();
+
+    renderer.render(scene, camera);
+  }
+
+  updateReadout();
+  loading.style.display = 'none';
+  animate();
+})();
+</script>
+
+</body>
+</html>
