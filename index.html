@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายงานผลการสำรวจความนิยมบะหมี่กึ่งสำเร็จรูป</title>
+    <title>แบบสำรวจความนิยมบะหมี่กึ่งสำเร็จรูป - วิชาคณิตศาสตร์ (ค33101) ม.6</title>
+    <!-- Chart.js สำหรับวาดกราฟ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
@@ -31,32 +32,46 @@
             background: #ffffff;
             border-radius: 16px;
             padding: 25px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         .header-card {
-            background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #2563eb 100%);
             color: white;
             text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-bottom: 12px;
+            backdrop-filter: blur(4px);
         }
 
         h1 {
             font-size: 24px;
             margin-bottom: 10px;
+            font-weight: 700;
         }
 
         h2 {
             font-size: 20px;
-            color: #4c1d95;
+            color: #3730a3;
             margin-bottom: 15px;
-            border-bottom: 2px solid #ddd6fe;
+            border-bottom: 2px solid #e0e7ff;
             padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .subtitle {
             font-size: 14px;
-            opacity: 0.9;
+            opacity: 0.95;
             margin-bottom: 20px;
         }
 
@@ -68,52 +83,109 @@
             padding: 15px;
             border-radius: 12px;
             text-align: left;
-            font-size: 15px;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Responsive Form Container */
+        .form-container {
+            position: relative;
+            width: 100%;
+            height: 984px;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: #fafafa;
+        }
+
+        .form-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #64748b;
         }
 
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 450px;
-            margin: 0 auto 20px auto;
+            max-width: 440px;
+            margin: 0 auto 10px auto;
         }
 
         .bar-chart-container {
             position: relative;
             width: 100%;
-            height: 300px;
+            height: 320px;
         }
 
         .picto-item {
             display: flex;
             align-items: center;
             margin-bottom: 12px;
-            font-size: 16px;
+            font-size: 15px;
         }
 
         .picto-label {
-            width: 110px;
+            width: 140px;
             font-weight: 600;
+            color: #334155;
         }
 
         .picto-icons {
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             font-size: 18px;
         }
 
-        ul {
+        ul.summary-list {
             padding-left: 20px;
         }
 
-        li {
-            margin-bottom: 10px;
+        ul.summary-list li {
+            margin-bottom: 12px;
+            color: #334155;
         }
 
         footer {
             text-align: center;
             font-size: 12px;
-            color: #6b7280;
+            color: #64748b;
             margin-top: 30px;
+            padding-bottom: 20px;
+        }
+
+        .tip-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            color: #1e40af;
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -121,10 +193,11 @@
 
     <div class="container">
         
-        <!-- Header Card -->
+        <!-- Header -->
         <div class="card header-card">
-            <h1>รายงานผลการสำรวจความนิยมบะหมี่กึ่งสำเร็จรูป</h1>
-            <p class="subtitle">ข้อมูลสรุปจากแบบสอบถามออนไลน์ กลุ่มตัวอย่างจำนวน 136 คน</p>
+            <span class="badge">รายวิชาคณิตศาสตร์ (ค33101) ชั้นมัธยมศึกษาปีที่ 6</span>
+            <h1>แบบสำรวจความนิยมบะหมี่กึ่งสำเร็จรูป</h1>
+            <p class="subtitle">ระบบรวบรวมข้อมูลแบบสำรวจออนไลน์พร้อมรายงานผลการวิเคราะห์สถิติแบบเรียลไทม์</p>
             
             <div class="members-grid">
                 <div>1. นายภูริณัฐ ลานตวน</div>
@@ -134,129 +207,190 @@
             </div>
         </div>
 
-        <!-- Overview -->
+        <!-- Section 1: Embedded Google Form -->
         <div class="card">
-            <h2>1. ภาพรวมการสำรวจ (Overview)</h2>
-            <p><strong>วัตถุประสงค์:</strong> สำรวจความพึงพอใจและยี่ห้อบะหมี่กึ่งสำเร็จรูปที่ผู้ตอบแบบสอบถามชื่นชอบมากที่สุด</p>
-            <p><strong>จำนวนผู้ตอบทั้งหมด:</strong> 136 คน</p>
-            <p><strong>ยี่ห้อที่ได้รับความนิยมสูงสุด:</strong> <span style="color: #8b5cf6; font-weight: bold;">บูลดัก (Buldak) 25.7%</span></p>
+            <h2>📝 ทำแบบสอบถามออนไลน์</h2>
+            <div class="tip-box">
+                💡 สามารถกรอกและกดส่งแบบสอบถามผ่านช่องหน้าต่างด้านล่างนี้ได้ทันที ข้อมูลจะถูกบันทึกเข้าระบบ Google Forms โดยตรง
+            </div>
+            
+            <div class="form-container">
+                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdmyP9odIATT7p9qohn_XzuibeSxVOl9Sn2W8Qd_ZhohP7Oyg/viewform?embedded=true" width="640" height="984" frameborder="0" marginheight="0" marginwidth="0">กำลังโหลด…</iframe>
+            </div>
         </div>
 
-        <!-- Pie Chart -->
+        <!-- Section 2: Overview Stats -->
         <div class="card">
-            <h2>2. สัดส่วนความนิยม (Pie Chart)</h2>
+            <h2>📊 สรุปข้อมูลภาพรวม (Overview)</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number" id="total-responses">136</div>
+                    <div class="stat-label">จำนวนผู้ตอบทั้งหมด (คน)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" style="color: #8b5cf6;">บูลดัก</div>
+                    <div class="stat-label">แบรนด์ยอดนิยมอันดับ 1 (25.7%)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" style="color: #059669;">7 ยี่ห้อ</div>
+                    <div class="stat-label">ตัวเลือกในการสำรวจ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Pie Chart -->
+        <div class="card">
+            <h2>🍩 แผนภูมิวงกลมแสดงสัดส่วนความนิยม (Pie Chart)</h2>
             <div class="chart-container">
                 <canvas id="pieChart"></canvas>
             </div>
         </div>
 
-        <!-- Bar Chart -->
+        <!-- Section 4: Bar Chart -->
         <div class="card">
-            <h2>3. การเปรียบเทียบอันดับความนิยม (Bar Chart)</h2>
+            <h2>📊 แผนภูมิแท่งเปรียบเทียบจำนวนผู้เลือก (Bar Chart)</h2>
             <div class="bar-chart-container">
                 <canvas id="barChart"></canvas>
             </div>
         </div>
 
-        <!-- Pictogram Chart -->
+        <!-- Section 5: Pictogram Chart -->
         <div class="card">
-            <h2>4. แผนภูมิรูปภาพ (Pictogram Chart)</h2>
-            <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px;">* สัญลักษณ์ 🍜 1 ถ้วย แทนผู้ตอบแบบสอบถามประมาณ 5 คน</p>
+            <h2>🍜 แผนภูมิรูปภาพ (Pictogram Chart)</h2>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">* สัญลักษณ์ 🍜 1 ถ้วย แทนจำนวนผู้ตอบประมาณ 5 คน</p>
             
-            <div class="picto-item">
-                <div class="picto-label">บูลดัก (35 คน)</div>
-                <div class="picto-icons">🍜🍜🍜🍜🍜🍜🍜</div>
-            </div>
-            <div class="picto-item">
-                <div class="picto-label">ไวไว (30 คน)</div>
-                <div class="picto-icons">🍜🍜🍜🍜🍜🍜</div>
-            </div>
-            <div class="picto-item">
-                <div class="picto-label">ยำยำ (27 คน)</div>
-                <div class="picto-icons">🍜🍜🍜🍜🍜</div>
-            </div>
-            <div class="picto-item">
-                <div class="picto-label">มาม่า (23 คน)</div>
-                <div class="picto-icons">🍜🍜🍜🍜</div>
-            </div>
-            <div class="picto-item">
-                <div class="picto-label">OK (21 คน)</div>
-                <div class="picto-icons">🍜🍜🍜🍜</div>
+            <div id="pictogram-list">
+                <!-- Generated dynamically via JS -->
             </div>
         </div>
 
-        <!-- Summary -->
+        <!-- Section 6: Summary & Analysis -->
         <div class="card">
-            <h2>5. สรุปผลการวิเคราะห์</h2>
-            <ul>
-                <li><strong>พฤติกรรมผู้บริโภค:</strong> บะหมี่กึ่งสำเร็จรูปเกาหลีรสชาติเผ็ดอย่าง <strong>บูลดัก</strong> ได้รับความนิยมเป็นอันดับ 1 (25.7%) สะท้อนถึงกระแสความนิยมอาหารสไตล์เกาหลี</li>
-                <li><strong>แบรนด์ดั้งเดิมของไทย:</strong> <strong>ไวไว (22.1%)</strong> และ <strong>ยำยำ (19.9%)</strong> ยังคงครองใจผู้บริโภคในอันดับ 2 และ 3 อย่างต่อเนื่อง</li>
-                <li><strong>การกระจายตัวของตลาด:</strong> ผู้บริโภคมีความหลากหลายในการเลือกทาน โดยสัดส่วนระหว่างแบรนด์ท็อป 5 มีความใกล้เคียงกัน</li>
+            <h2>📌 บทสรุปผลการวิเคราะห์ข้อมูลสถิติ</h2>
+            <ul class="summary-list">
+                <li><strong>แบรนด์ที่ได้รับความนิยมสูงสุด:</strong> <strong>บูลดัก (Buldak)</strong> มาเป็นอันดับ 1 คิดเป็น <strong>25.7%</strong> (35 คน) สะท้อนถึงกระแสความนิยมบะหมี่กึ่งสำเร็จรูปสไตล์เกาหลีรสเผ็ดในกลุ่มผู้ตอบแบบสอบถาม</li>
+                <li><strong>แบรนด์ยอดนิยมกลุ่มรอง:</strong> <strong>ไวไว (22.1% - 30 คน)</strong> และ <strong>ยำยำ (19.9% - 27 คน)</strong> ครองอันดับ 2 และ 3 ตามลำดับ</li>
+                <li><strong>แบรนด์อื่นๆ:</strong> <strong>มาม่า (16.9% - 23 คน)</strong>, <strong>OK (15.4% - 21 คน)</strong>, <strong>นิสชิน</strong> และ <strong>ควิกส์</strong> มีสัดส่วนผู้เลือกตามลำดับ</li>
             </ul>
         </div>
 
         <footer>
-            © 2026 รายงานผลการสำรวจ | พัฒนาด้วย GitHub Pages
+            © 2026 รายงานผลการสำรวจสถิติ | รายวิชาคณิตศาสตร์ (ค33101) ม.6 | ระบบเชื่อมต่อ Google Forms & GitHub Pages
         </footer>
 
     </div>
 
     <script>
+        // ข้อมูลตัวเลือกยี่ห้อบะหมี่กึ่งสำเร็จรูปทั้งหมดจาก Google Form
         const chartData = {
-            labels: ['บูลดัก', 'ไวไว', 'ยำยำ', 'มาม่า', 'OK'],
-            percentages: [25.7, 22.1, 19.9, 16.9, 15.4],
-            counts: [35, 30, 27, 23, 21],
-            colors: ['#8b5cf6', '#f97316', '#ec4899', '#3b82f6', '#10b981']
+            labels: ['บูลดัก', 'ไวไว', 'ยำยำ', 'มาม่า', 'OK', 'นิสชิน', 'ควิกส์'],
+            percentages: [25.7, 22.1, 19.9, 16.9, 15.4, 12.0, 8.0],
+            counts: [35, 30, 27, 23, 21, 16, 11],
+            colors: [
+                '#8b5cf6', // บูลดัก (ม่วง)
+                '#f97316', // ไวไว (ส้ม)
+                '#ec4899', // ยำยำ (ชมพู)
+                '#3b82f6', // มาม่า (น้ำเงิน)
+                '#10b981', // OK (เขียว)
+                '#eab308', // นิสชิน (เหลือง)
+                '#06b6d4'  // ควิกส์ (ฟ้า)
+            ]
         };
 
-        // Pie Chart
-        new Chart(document.getElementById('pieChart'), {
-            type: 'pie',
-            data: {
-                labels: chartData.labels,
-                datasets: [{
-                    data: chartData.percentages,
-                    backgroundColor: chartData.colors
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return ` ${context.label}: ${context.raw}%`;
+        // ฟังก์ชั่นสร้างแผนภูมิรูปภาพ (Pictogram)
+        function renderPictogram() {
+            const container = document.getElementById('pictogram-list');
+            container.innerHTML = '';
+            
+            chartData.labels.forEach((label, index) => {
+                const count = chartData.counts[index];
+                const iconCount = Math.max(1, Math.round(count / 5));
+                const icons = '🍜'.repeat(iconCount);
+                
+                const item = document.createElement('div');
+                item.className = 'picto-item';
+                item.innerHTML = `
+                    <div class="picto-label">${label} (${count} คน)</div>
+                    <div class="picto-icons">${icons}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // ฟังก์ชั่นสร้างกราฟ Chart.js
+        function renderCharts() {
+            // Pie Chart
+            new Chart(document.getElementById('pieChart'), {
+                type: 'pie',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        data: chartData.percentages,
+                        backgroundColor: chartData.colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { family: 'Sarabun', size: 13 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw}% (${chartData.counts[context.dataIndex]} คน)`;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
 
-        // Bar Chart
-        new Chart(document.getElementById('barChart'), {
-            type: 'bar',
-            data: {
-                labels: chartData.labels,
-                datasets: [{
-                    label: 'จำนวนผู้เลือก (คน)',
-                    data: chartData.counts,
-                    backgroundColor: chartData.colors,
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+            // Bar Chart
+            new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'จำนวนผู้เลือก (คน)',
+                        data: chartData.counts,
+                        backgroundColor: chartData.colors,
+                        borderRadius: 8
+                    }]
                 },
-                scales: {
-                    y: { beginAtZero: true }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` จำนวนผู้เลือก: ${context.raw} คน`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { font: { family: 'Sarabun', size: 13 } }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { font: { family: 'Sarabun', size: 12 } }
+                        }
+                    }
                 }
-            }
-        });
+            });
+        }
+
+        window.onload = function() {
+            renderCharts();
+            renderPictogram();
+        };
     </script>
 </body>
 </html>
