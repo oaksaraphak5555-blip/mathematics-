@@ -6,6 +6,8 @@
     <title>แบบสำรวจความนิยมบะหมี่กึ่งสำเร็จรูป - วิชาคณิตศาสตร์ (ค33101) ม.6</title>
     <!-- Chart.js สำหรับแสดงกราฟ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse สำหรับอ่านไฟล์ CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
         
@@ -87,7 +89,6 @@
             backdrop-filter: blur(5px);
         }
 
-        /* Form Container */
         .form-container {
             position: relative;
             width: 100%;
@@ -221,7 +222,7 @@
         <div class="card">
             <h2>📝 ทำแบบสอบถามออนไลน์</h2>
             <div class="tip-box">
-                💡 เมื่อกดส่งคำตอบแล้ว ตัวเลขสรุปผลและกราฟด้านล่างจะอัปเดตคำนวณใหม่ให้อัตโนมัติ!
+                💡 เมื่อกดส่งคำตอบแล้ว รีเฟรชหน้าเว็บแล้วตัวเลขและกราฟจะคำนวณให้อัตโนมัติ!
             </div>
             
             <div class="form-container">
@@ -231,7 +232,7 @@
 
         <!-- Section 2: Overview Stats -->
         <div class="card">
-            <h2>📊 สรุปข้อมูลภาพรวม <span class="status-badge" id="data-source">Real-time Sync</span></h2>
+            <h2>📊 สรุปข้อมูลภาพรวม <span class="status-badge" id="data-source">กำลังโหลด...</span></h2>
             <div class="stats-grid">
                 <div class="stat-box">
                     <div class="stat-number" id="total-responses">0</div>
@@ -267,7 +268,7 @@
         <!-- Section 5: Pictogram Chart -->
         <div class="card">
             <h2>🍜 แผนภูมิรูปภาพ (Pictogram Chart)</h2>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">* สัญลักษณ์ 🍜 1 ถ้วย แทนจำนวนผู้ตอบประมาณ 5 คน</p>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">* สัญลักษณ์ 🍜 1 ถ้วย แทนจำนวนผู้ตอบประมาณ 1 คน</p>
             
             <div id="pictogram-list">
                 <!-- Generated dynamically via JS -->
@@ -289,70 +290,67 @@
     </div>
 
     <script>
-        // ลิงก์ CSV ดึงข้อมูลจาก Google Sheets ของคุณ
-        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Dz9jEmGedcWMln3MG_TLEXiJCkuZDXvEQf972hYdEw0/export?format=csv'; 
+        const RAW_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Dz9jEmGedcWMln3MG_TLEXiJCkuZDXvEQf972hYdEw0/export?format=csv';
+        // ใช้ Proxy ทะลุการบล็อก CORS ของเบราว์เซอร์
+        const PROXY_URL = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(RAW_CSV_URL);
 
-        // รายชื่อยี่ห้อบะหมี่ทั้งหมด
         const BRANDS = ['บูลดัก', 'ไวไว', 'ยำยำ', 'มาม่า', 'OK', 'นิสชิน', 'ควิกส์'];
         const BRAND_COLORS = [
-            '#8b5cf6', // บูลดัก (ม่วง)
-            '#f97316', // ไวไว (ส้ม)
-            '#ec4899', // ยำยำ (ชมพู)
-            '#3b82f6', // มาม่า (น้ำเงิน)
-            '#10b981', // OK (เขียว)
-            '#eab308', // นิสชิน (เหลือง)
-            '#06b6d4'  // ควิกส์ (ฟ้า)
+            '#8b5cf6', '#f97316', '#ec4899', '#3b82f6', '#10b981', '#eab308', '#06b6d4'
         ];
 
         let pieChartObj = null;
         let barChartObj = null;
 
-        // ฟังก์ชั่นดึงข้อมูลและประมวลผล
         async function fetchAndRenderData() {
             let counts = { 'บูลดัก': 0, 'ไวไว': 0, 'ยำยำ': 0, 'มาม่า': 0, 'OK': 0, 'นิสชิน': 0, 'ควิกส์': 0 };
             let total = 0;
-            let isLiveData = false;
+            let isSuccess = false;
 
             try {
-                const res = await fetch(GOOGLE_SHEET_CSV_URL);
+                const res = await fetch(PROXY_URL);
                 const csvText = await res.text();
-                const rows = csvText.split('\n');
-
-                // นับข้อมูลจากไฟล์ CSV (ข้ามแถวแรกที่เป็น Header)
-                for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i];
-                    if (!row.trim()) continue;
-                    
-                    BRANDS.forEach(brand => {
-                        if (row.includes(brand)) {
-                            counts[brand]++;
+                
+                Papa.parse(csvText, {
+                    header: false,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        const rows = results.data;
+                        // ข้าม Header แถวแรก
+                        for (let i = 1; i < rows.length; i++) {
+                            const rowStr = JSON.stringify(rows[i]);
+                            let found = false;
+                            
+                            BRANDS.forEach(brand => {
+                                if (rowStr.includes(brand)) {
+                                    counts[brand]++;
+                                    found = true;
+                                }
+                            });
+                            
+                            if (found) total++;
                         }
-                    });
-                    total++;
-                }
-                isLiveData = true;
+                        isSuccess = true;
+                        
+                        const percentages = BRANDS.map(b => total > 0 ? ((counts[b] / total) * 100).toFixed(1) : 0);
+                        const countValues = BRANDS.map(b => counts[b]);
+
+                        updateOverview(total, counts, percentages, isSuccess);
+                        renderCharts(countValues, percentages);
+                        renderPictogram(countValues);
+                        updateSummaryText(counts, percentages, total);
+                    }
+                });
+
             } catch (err) {
-                console.warn("ไม่สามารถดึงข้อมูลจาก CSV ได้", err);
+                console.error("Error fetching data:", err);
+                document.getElementById('data-source').innerText = "เชื่อมต่อล้มเหลว";
             }
-
-            // คำนวณเปอร์เซ็นต์
-            const percentages = BRANDS.map(brand => {
-                return total > 0 ? ((counts[brand] / total) * 100).toFixed(1) : 0;
-            });
-
-            const countValues = BRANDS.map(brand => counts[brand]);
-
-            // อัปเดตการแสดงผล
-            updateOverview(total, counts, percentages, isLiveData);
-            renderCharts(countValues, percentages);
-            renderPictogram(countValues);
-            updateSummaryText(counts, percentages, total);
         }
 
-        // อัปเดตกล่องตัวเลขสรุป
-        function updateOverview(total, counts, percentages, isLiveData) {
+        function updateOverview(total, counts, percentages, isSuccess) {
             document.getElementById('total-responses').innerText = total;
-            document.getElementById('data-source').innerText = isLiveData ? "Live Sync" : "เชื่อมต่อไม่สำเร็จ";
+            document.getElementById('data-source').innerText = isSuccess ? "Live Sync" : "เชื่อมต่อไม่สำเร็จ";
 
             let topBrand = BRANDS[0];
             let maxCount = counts[BRANDS[0]];
@@ -368,12 +366,10 @@
             document.getElementById('top-brand-percent').innerText = `แบรนด์ยอดนิยมอันดับ 1 (${topPercent}%)`;
         }
 
-        // วาดกราฟ Pie Chart และ Bar Chart
         function renderCharts(countValues, percentages) {
             if (pieChartObj) pieChartObj.destroy();
             if (barChartObj) barChartObj.destroy();
 
-            // Pie Chart
             pieChartObj = new Chart(document.getElementById('pieChart'), {
                 type: 'pie',
                 data: {
@@ -400,7 +396,6 @@
                 }
             });
 
-            // Bar Chart
             barChartObj = new Chart(document.getElementById('barChart'), {
                 type: 'bar',
                 data: {
@@ -427,21 +422,19 @@
                     },
                     scales: {
                         x: { ticks: { font: { family: 'Sarabun', size: 13 } } },
-                        y: { beginAtZero: true, ticks: { font: { family: 'Sarabun', size: 12 } } }
+                        y: { beginAtZero: true, ticks: { font: { family: 'Sarabun', size: 12 }, stepSize: 1 } }
                     }
                 }
             });
         }
 
-        // วาดแผนภูมิรูปภาพ
         function renderPictogram(countValues) {
             const container = document.getElementById('pictogram-list');
             container.innerHTML = '';
             
             BRANDS.forEach((brand, idx) => {
                 const count = countValues[idx];
-                const iconCount = count > 0 ? Math.max(1, Math.round(count / 5)) : 0;
-                const icons = '🍜'.repeat(iconCount);
+                const icons = '🍜'.repeat(count);
                 
                 const item = document.createElement('div');
                 item.className = 'picto-item';
@@ -453,7 +446,6 @@
             });
         }
 
-        // อัปเดตข้อความสรุปผล
         function updateSummaryText(counts, percentages, total) {
             const sorted = BRANDS.map((b, i) => ({ brand: b, count: counts[b], percent: percentages[i] }))
                                 .sort((a, b) => b.count - a.count);
@@ -477,4 +469,3 @@
     </script>
 </body>
 </html>
-
