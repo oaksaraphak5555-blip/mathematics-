@@ -289,10 +289,8 @@
     </div>
 
     <script>
-        // =============================================================
-        //  วางลิงก์ CSV จาก Google Sheets ตรงนี้ (ดูวิธีเอาลิงก์ด้านล่าง)
-        // =============================================================
-        const GOOGLE_SHEET_CSV_URL = ''; 
+        // ลิงก์ CSV ดึงข้อมูลจาก Google Sheets ของคุณ
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Dz9jEmGedcWMln3MG_TLEXiJCkuZDXvEQf972hYdEw0/export?format=csv'; 
 
         // รายชื่อยี่ห้อบะหมี่ทั้งหมด
         const BRANDS = ['บูลดัก', 'ไวไว', 'ยำยำ', 'มาม่า', 'OK', 'นิสชิน', 'ควิกส์'];
@@ -306,17 +304,6 @@
             '#06b6d4'  // ควิกส์ (ฟ้า)
         ];
 
-        // ข้อมูลตั้งต้นกรณีที่ยังไม่ได้ใส่ลิงก์ Google Sheets CSV
-        let fallbackData = {
-            'บูลดัก': 35,
-            'ไวไว': 30,
-            'ยำยำ': 27,
-            'มาม่า': 23,
-            'OK': 21,
-            'นิสชิน': 16,
-            'ควิกส์': 11
-        };
-
         let pieChartObj = null;
         let barChartObj = null;
 
@@ -326,33 +313,26 @@
             let total = 0;
             let isLiveData = false;
 
-            if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.trim() !== '') {
-                try {
-                    const res = await fetch(GOOGLE_SHEET_CSV_URL);
-                    const csvText = await res.text();
-                    const rows = csvText.split('\n');
+            try {
+                const res = await fetch(GOOGLE_SHEET_CSV_URL);
+                const csvText = await res.text();
+                const rows = csvText.split('\n');
 
-                    // นับข้อมูลจากไฟล์ CSV (ข้ามแถวแรกที่เป็น Header)
-                    for (let i = 1; i < rows.length; i++) {
-                        const row = rows[i];
-                        if (!row.trim()) continue;
-                        
-                        BRANDS.forEach(brand => {
-                            if (row.includes(brand)) {
-                                counts[brand]++;
-                            }
-                        });
-                        total++;
-                    }
-                    isLiveData = true;
-                } catch (err) {
-                    console.warn("ไม่สามารถดึงข้อมูลจาก CSV ได้ กำลังใช้ข้อมูลสำรอง", err);
-                    counts = fallbackData;
-                    total = Object.values(counts).reduce((a, b) => a + b, 0);
+                // นับข้อมูลจากไฟล์ CSV (ข้ามแถวแรกที่เป็น Header)
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row.trim()) continue;
+                    
+                    BRANDS.forEach(brand => {
+                        if (row.includes(brand)) {
+                            counts[brand]++;
+                        }
+                    });
+                    total++;
                 }
-            } else {
-                counts = fallbackData;
-                total = Object.values(counts).reduce((a, b) => a + b, 0);
+                isLiveData = true;
+            } catch (err) {
+                console.warn("ไม่สามารถดึงข้อมูลจาก CSV ได้", err);
             }
 
             // คำนวณเปอร์เซ็นต์
@@ -372,9 +352,8 @@
         // อัปเดตกล่องตัวเลขสรุป
         function updateOverview(total, counts, percentages, isLiveData) {
             document.getElementById('total-responses').innerText = total;
-            document.getElementById('data-source').innerText = isLiveData ? "Live CSV Sync" : "ข้อมูลจำลอง";
+            document.getElementById('data-source').innerText = isLiveData ? "Live Sync" : "เชื่อมต่อไม่สำเร็จ";
 
-            // หาแบรนด์ที่คนเลือกมากที่สุด
             let topBrand = BRANDS[0];
             let maxCount = counts[BRANDS[0]];
             BRANDS.forEach(b => {
@@ -385,7 +364,7 @@
             });
 
             const topPercent = total > 0 ? ((maxCount / total) * 100).toFixed(1) : 0;
-            document.getElementById('top-brand').innerText = topBrand;
+            document.getElementById('top-brand').innerText = maxCount > 0 ? topBrand : "-";
             document.getElementById('top-brand-percent').innerText = `แบรนด์ยอดนิยมอันดับ 1 (${topPercent}%)`;
         }
 
@@ -413,7 +392,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(ctx) {
-                                    return ` ${ctx.label}: ${ctx.raw}\% (${countValues[ctx.dataIndex]} คน)`;
+                                    return ` ${ctx.label}: ${ctx.raw}% (${countValues[ctx.dataIndex]} คน)`;
                                 }
                             }
                         }
@@ -461,14 +440,14 @@
             
             BRANDS.forEach((brand, idx) => {
                 const count = countValues[idx];
-                const iconCount = Math.max(1, Math.round(count / 5)); // 1 ถ้วย = ~5 คน
+                const iconCount = count > 0 ? Math.max(1, Math.round(count / 5)) : 0;
                 const icons = '🍜'.repeat(iconCount);
                 
                 const item = document.createElement('div');
                 item.className = 'picto-item';
                 item.innerHTML = `
                     <div class="picto-label">${brand} (${count} คน)</div>
-                    <div class="picto-icons">${icons}</div>
+                    <div class="picto-icons">${icons || '-'}</div>
                 `;
                 container.appendChild(item);
             });
@@ -476,11 +455,15 @@
 
         // อัปเดตข้อความสรุปผล
         function updateSummaryText(counts, percentages, total) {
-            // เรียงลำดับจากมากไปน้อย
             const sorted = BRANDS.map((b, i) => ({ brand: b, count: counts[b], percent: percentages[i] }))
                                 .sort((a, b) => b.count - a.count);
 
             const list = document.getElementById('summary-text-list');
+            if (total === 0) {
+                list.innerHTML = `<li>ยังไม่มีผู้ตอบแบบสอบถาม</li>`;
+                return;
+            }
+
             list.innerHTML = `
                 <li><strong>อันดับ 1 ที่ได้รับความนิยมสูงสุด:</strong> <strong>${sorted[0].brand}</strong> มีผู้เลือก <strong>${sorted[0].count} คน (${sorted[0].percent}%)</strong></li>
                 <li><strong>อันดับรองลงมา:</strong> <strong>${sorted[1].brand}</strong> (${sorted[1].percent}%) และ <strong>${sorted[2].brand}</strong> (${sorted[2].percent}%) ตามลำดับ</li>
@@ -488,7 +471,6 @@
             `;
         }
 
-        // เรียกทำงานเมื่อโหลดหน้าเว็บ
         window.onload = function() {
             fetchAndRenderData();
         };
