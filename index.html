@@ -6,8 +6,6 @@
     <title>แบบสำรวจความนิยมบะหมี่กึ่งสำเร็จรูป - วิชาคณิตศาสตร์ (ค33101) ม.6</title>
     <!-- Chart.js สำหรับแสดงกราฟ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PapaParse สำหรับอ่านไฟล์ CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
         
@@ -222,7 +220,7 @@
         <div class="card">
             <h2>📝 ทำแบบสอบถามออนไลน์</h2>
             <div class="tip-box">
-                💡 เมื่อกดส่งคำตอบแล้ว รีเฟรชหน้าเว็บแล้วตัวเลขและกราฟจะคำนวณให้อัตโนมัติ!
+                💡 เมื่อกดส่งคำตอบแล้ว รีเฟรชหน้าเว็บเพื่ออัปเดตข้อมูลและกราฟได้ทันที!
             </div>
             
             <div class="form-container">
@@ -268,7 +266,7 @@
         <!-- Section 5: Pictogram Chart -->
         <div class="card">
             <h2>🍜 แผนภูมิรูปภาพ (Pictogram Chart)</h2>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">* สัญลักษณ์ 🍜 1 ถ้วย แทนจำนวนผู้ตอบประมาณ 1 คน</p>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">* สัญลักษณ์ 🍜 1 ถ้วย แทนจำนวนผู้ตอบ 1 คน</p>
             
             <div id="pictogram-list">
                 <!-- Generated dynamically via JS -->
@@ -290,9 +288,9 @@
     </div>
 
     <script>
-        const RAW_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Dz9jEmGedcWMln3MG_TLEXiJCkuZDXvEQf972hYdEw0/export?format=csv';
-        // ใช้ Proxy ทะลุการบล็อก CORS ของเบราว์เซอร์
-        const PROXY_URL = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(RAW_CSV_URL);
+        const SHEET_ID = '1Dz9jEmGedcWMln3MG_TLEXiJCkuZDXvEQf972hYdEw0';
+        // ใช้ Google Visualization Endpoint ที่เสถียรที่สุด ไม่ติด CORS
+        const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
         const BRANDS = ['บูลดัก', 'ไวไว', 'ยำยำ', 'มาม่า', 'OK', 'นิสชิน', 'ควิกส์'];
         const BRAND_COLORS = [
@@ -305,45 +303,41 @@
         async function fetchAndRenderData() {
             let counts = { 'บูลดัก': 0, 'ไวไว': 0, 'ยำยำ': 0, 'มาม่า': 0, 'OK': 0, 'นิสชิน': 0, 'ควิกส์': 0 };
             let total = 0;
-            let isSuccess = false;
 
             try {
-                const res = await fetch(PROXY_URL);
-                const csvText = await res.text();
+                const res = await fetch(GVIZ_URL);
+                const text = await res.text();
                 
-                Papa.parse(csvText, {
-                    header: false,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        const rows = results.data;
-                        // ข้าม Header แถวแรก
-                        for (let i = 1; i < rows.length; i++) {
-                            const rowStr = JSON.stringify(rows[i]);
-                            let found = false;
-                            
-                            BRANDS.forEach(brand => {
-                                if (rowStr.includes(brand)) {
-                                    counts[brand]++;
-                                    found = true;
-                                }
-                            });
-                            
-                            if (found) total++;
-                        }
-                        isSuccess = true;
-                        
-                        const percentages = BRANDS.map(b => total > 0 ? ((counts[b] / total) * 100).toFixed(1) : 0);
-                        const countValues = BRANDS.map(b => counts[b]);
+                // ตัดข้อความส่วนเกินจาก Google JSONP Response
+                const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonText);
+                
+                const rows = data.table.rows;
 
-                        updateOverview(total, counts, percentages, isSuccess);
-                        renderCharts(countValues, percentages);
-                        renderPictogram(countValues);
-                        updateSummaryText(counts, percentages, total);
-                    }
+                rows.forEach(row => {
+                    const rowString = JSON.stringify(row);
+                    let matched = false;
+
+                    BRANDS.forEach(brand => {
+                        if (rowString.includes(brand)) {
+                            counts[brand]++;
+                            matched = true;
+                        }
+                    });
+
+                    if (matched) total++;
                 });
 
+                const percentages = BRANDS.map(b => total > 0 ? ((counts[b] / total) * 100).toFixed(1) : 0);
+                const countValues = BRANDS.map(b => counts[b]);
+
+                updateOverview(total, counts, percentages, true);
+                renderCharts(countValues, percentages);
+                renderPictogram(countValues);
+                updateSummaryText(counts, percentages, total);
+
             } catch (err) {
-                console.error("Error fetching data:", err);
+                console.error("Error loading sheet data:", err);
                 document.getElementById('data-source').innerText = "เชื่อมต่อล้มเหลว";
             }
         }
@@ -469,3 +463,4 @@
     </script>
 </body>
 </html>
+
