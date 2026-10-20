@@ -2,7 +2,7 @@
   const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
   const COLS = 40, ROWS = 28;
   
-  // ขนาดของบล็อก Isometric (ความกว้าง 64px, ความสูง 32px)
+  // ขนาดบล็อก Isometric
   const TILE_W = 64, TILE_H = 32;
 
   const map = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => {
@@ -25,8 +25,8 @@
   ];
 
   const ZOMBIE_TYPES = {
-    walker: { name: 'Walker', hp: 2, color: '#9e5c54', speed: 0.04, dmg: 3, alertDist: 4 },
-    runner: { name: 'Runner', hp: 1, color: '#d9534f', speed: 0.10, dmg: 5, alertDist: 7 },
+    walker: { name: 'Walker', hp: 2, color: '#9e5c54', speed: 0.035, dmg: 3, alertDist: 4 },
+    runner: { name: 'Runner', hp: 1, color: '#d9534f', speed: 0.08, dmg: 5, alertDist: 7 },
     brute:  { name: 'Brute',  hp: 5, color: '#5b3256', speed: 0.02, dmg: 10, alertDist: 3 }
   };
 
@@ -62,15 +62,27 @@
 
   function tile(x, y) {
     if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return 1;
-    return map[y][x];
+    return map[Math.floor(y)][Math.floor(x)];
   }
 
-  function blocked(x, y) { return tile(Math.floor(x), Math.floor(y)) === 1; }
+  function blocked(x, y) { return tile(x, y) === 1; }
   function nearPlace() { return places.find(p => Math.hypot(p.x + .5 - Z.x, p.y + .5 - Z.y) < 1.7); }
 
-  function move(dx, dy) {
+  // 🎮 ระบบควบคุมทิศทางใหม่ (Screen-Aligned Movement เข้ากับมุมกล้องพอดี)
+  function moveScreenDirection(dir) {
     if (Z.ending) return;
-    let nx = Z.x + dx * 0.25, ny = Z.y + dy * 0.25;
+    
+    // แปลงทิศทางบนจอให้ตรงกับโลก Isometric แบบเป๊ะๆ
+    // Up = ขึ้นจอ, Down = ลงจอ, Left = ซ้ายจอ, Right = ขวาจอ
+    let dx = 0, dy = 0;
+    const speed = 0.22;
+
+    if (dir === 'up')    { dx = -speed; dy = -speed; }
+    if (dir === 'down')  { dx = speed;  dy = speed; }
+    if (dir === 'left')  { dx = -speed; dy = speed; }
+    if (dir === 'right') { dx = speed;  dy = -speed; }
+
+    let nx = Z.x + dx, ny = Z.y + dy;
     if (!blocked(nx, ny) && !blocked(nx + 0.1, ny + 0.1)) {
       Z.x = nx; Z.y = ny;
       Z.steps++;
@@ -119,7 +131,7 @@
   function checkEncounter() {
     Z.zombies.forEach(z => {
       let typeData = ZOMBIE_TYPES[z.type || 'walker'];
-      let d = Math.hypot(z.x - Z.x, z.y - Z.y);
+      let d = Math.hypot(Z.x - z.x, Z.y - z.y);
       if (d < .75) {
         Z.hp = Math.max(0, Z.hp - typeData.dmg);
         Z.sanity = Math.max(0, Z.sanity - 2);
@@ -309,7 +321,7 @@
     document.getElementById('status').textContent = Z.ending ? 'สถานะ: ' + Z.ending.title : 'สถานะ: กำลังสำรวจ';
   }
 
-  // 🗺️ ระบบแปลงพิกัด Isometric (2.5D Projection)
+  // แปลงพิกัด Isometric
   function toIso(x, y) {
     let screenX = (x - y) * (TILE_W / 2);
     let screenY = (x + y) * (TILE_H / 2);
@@ -319,7 +331,6 @@
   function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // คำนวณตำแหน่งกล้องให้ติดตามผู้เล่น (Third-Person Camera Tracking)
     let playerScreen = toIso(Z.x, Z.y);
     let camX = playerScreen.x - canvas.width / 2;
     let camY = playerScreen.y - canvas.height / 2;
@@ -331,12 +342,10 @@
         let sx = iso.x - camX;
         let sy = iso.y - camY;
 
-        // เช็คว่าอยู่ในจอไหม (Culling เพื่อความลื่นไหล)
         if (sx < -TILE_W || sx > canvas.width + TILE_W || sy < -TILE_H || sy > canvas.height + TILE_H) continue;
 
         let t = map[y][x];
         
-        // วาดรูปเพชร (Diamond Tile)
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(sx + TILE_W / 2, sy + TILE_H / 2);
@@ -350,7 +359,6 @@
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // ถ้าเป็นตึก (Wall / Building) วาดกล่อง 2.5D จำลองตึกสูง
         if (t === 1) {
           ctx.fillStyle = '#141c17';
           ctx.fillRect(sx - 16, sy - 18, 32, 22);
@@ -360,7 +368,7 @@
       }
     }
 
-    // 2. รวบรวมวัตถุทั้งหมด (สถานที่, ซอมบี้, ผู้เล่น) มาเรียงตามแกน Y (Y-Sorting) เพื่อให้การซ้อนทับถูกต้องแบบ 3 มิติ
+    // 2. จัดเรียงเลเยอร์วัตถุตามแกน Y (Y-Sorting) ให้ซ้อนทับกันถูกต้องแบบ 3 มิติ
     let renderList = [];
 
     places.forEach(p => {
@@ -376,7 +384,6 @@
     let pIso = toIso(Z.x, Z.y);
     renderList.push({ type: 'player', y: Z.y, x: Z.x, sx: pIso.x - camX, sy: pIso.y - camY });
 
-    // เรียงลำดับตามพิกัด Y (ด้านล่างทับด้านบน)
     renderList.sort((a, b) => (a.y + a.x) - (b.y + b.x));
 
     // 3. วาดวัตถุลงบนจอ
@@ -402,14 +409,13 @@
         let typeData = ZOMBIE_TYPES[z.type || 'walker'];
         ctx.fillStyle = typeData.color;
         ctx.beginPath();
-        ctx.arc(item.sx, item.sy - 8, 11, 0, Math.PI * 2);
+        ctx.arc(item.sx, item.sy - 8, z.type === 'brute' ? 14 : 11, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 1.5;
         ctx.stroke();
       } 
       else if (item.type === 'player') {
-        // วาดตัวละครผู้เล่น (Third-Person Perspective Avatar)
         ctx.fillStyle = '#d8e5c7';
         ctx.beginPath();
         ctx.arc(item.sx, item.sy - 12, 13, 0, Math.PI * 2);
@@ -458,30 +464,34 @@
   };
   document.getElementById('dlgClose').onclick = close;
 
+  // ⌨️ ควบคุมผ่านแป้นพิมพ์ (คีย์บอร์ด)
   window.addEventListener('keydown', e => {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 'a', 's', 'd'].includes(e.key.toLowerCase()) && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-      if (e.key === ' ') { e.preventDefault(); interact(); return; }
+    const k = e.key.toLowerCase();
+    if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', ' '].includes(k) && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      if (k === ' ') { e.preventDefault(); interact(); return; }
       e.preventDefault();
-      const k = e.key.toLowerCase();
-      // ปรับทิศทางเดินให้เข้ากับมุมมอง Isometric (เฉียง 45 องศา)
-      let dx = 0, dy = 0;
-      if (k === 'arrowup' || k === 'w') { dx = -1; dy = -1; }
-      if (k === 'arrowdown' || k === 's') { dx = 1; dy = 1; }
-      if (k === 'arrowleft' || k === 'a') { dx = -1; dy = 1; }
-      if (k === 'arrowright' || k === 'd') { dx = 1; dy = -1; }
-      move(dx, dy);
+      if (k === 'arrowup' || k === 'w') moveScreenDirection('up');
+      if (k === 'arrowdown' || k === 's') moveScreenDirection('down');
+      if (k === 'arrowleft' || k === 'a') moveScreenDirection('left');
+      if (k === 'arrowright' || k === 'd') moveScreenDirection('right');
     }
-    if (e.key.toLowerCase() === 'e') interact();
-    if (e.key.toLowerCase() === 'f') attack();
+    if (k === 'e') interact();
+    if (k === 'f') attack();
   });
 
+  // 📱 ควบคุมผ่านปุ่ม D-Pad บนมือถือ (ตรงกับทิศทางจอเป๊ะๆ)
   document.querySelectorAll('[data-move]').forEach(b => {
     let [dx, dy] = b.dataset.move.split(',').map(Number);
-    // แปลงปุ่มกดทิศทางบนจอมือถือให้เข้ากับ Isometric
-    let isoDx = dx - dy, isoDy = dx + dy;
+    let dir = 'up';
+    if (dx === 0 && dy === -1) dir = 'up';
+    if (dx === 0 && dy === 1)  dir = 'down';
+    if (dx === -1 && dy === 0) dir = 'left';
+    if (dx === 1 && dy === 0)  dir = 'right';
+
     b.addEventListener('pointerdown', e => {
-      e.preventDefault(); move(isoDx, isoDy);
-      moveHold = setInterval(() => move(isoDx, isoDy), 150);
+      e.preventDefault(); 
+      moveScreenDirection(dir);
+      moveHold = setInterval(() => moveScreenDirection(dir), 140);
     });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => { clearInterval(moveHold); moveHold = null; }));
   });
