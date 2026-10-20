@@ -1,8 +1,6 @@
 (() => {
   const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
   const COLS = 40, ROWS = 28;
-  
-  // ขนาดบล็อก Isometric
   const TILE_W = 64, TILE_H = 32;
 
   const map = Array.from({ length: ROWS }, (_, y) => Array.from({ length: COLS }, (_, x) => {
@@ -25,9 +23,9 @@
   ];
 
   const ZOMBIE_TYPES = {
-    walker: { name: 'Walker', hp: 2, color: '#9e5c54', speed: 0.035, dmg: 3, alertDist: 4 },
-    runner: { name: 'Runner', hp: 1, color: '#d9534f', speed: 0.08, dmg: 5, alertDist: 7 },
-    brute:  { name: 'Brute',  hp: 5, color: '#5b3256', speed: 0.02, dmg: 10, alertDist: 3 }
+    walker: { name: 'Walker', hp: 2, color: '#6b8c73', accent: '#4a6350', speed: 0.035, dmg: 3, alertDist: 4 },
+    runner: { name: 'Runner', hp: 1, color: '#a64d4d', accent: '#783535', speed: 0.08, dmg: 5, alertDist: 7 },
+    brute:  { name: 'Brute',  hp: 5, color: '#5b3256', accent: '#3b1f38', speed: 0.02, dmg: 10, alertDist: 3 }
   };
 
   let Z = initial();
@@ -68,19 +66,15 @@
   function blocked(x, y) { return tile(x, y) === 1; }
   function nearPlace() { return places.find(p => Math.hypot(p.x + .5 - Z.x, p.y + .5 - Z.y) < 1.7); }
 
-  // 🎮 ระบบควบคุมทิศทางใหม่ (Screen-Aligned Movement เข้ากับมุมกล้องพอดี)
   function moveScreenDirection(dir) {
     if (Z.ending) return;
-    
-    // แปลงทิศทางบนจอให้ตรงกับโลก Isometric แบบเป๊ะๆ
-    // Up = ขึ้นจอ, Down = ลงจอ, Left = ซ้ายจอ, Right = ขวาจอ
     let dx = 0, dy = 0;
     const speed = 0.22;
 
-    if (dir === 'up')    { dx = -speed; dy = -speed; }
-    if (dir === 'down')  { dx = speed;  dy = speed; }
-    if (dir === 'left')  { dx = -speed; dy = speed; }
-    if (dir === 'right') { dx = speed;  dy = -speed; }
+    if (dir === 'up')    { dx = -speed; dy = -speed; Z.facing = 'up'; }
+    if (dir === 'down')  { dx = speed;  dy = speed;  Z.facing = 'down'; }
+    if (dir === 'left')  { dx = -speed; dy = speed;  Z.facing = 'left'; }
+    if (dir === 'right') { dx = speed;  dy = -speed; Z.facing = 'right'; }
 
     let nx = Z.x + dx, ny = Z.y + dy;
     if (!blocked(nx, ny) && !blocked(nx + 0.1, ny + 0.1)) {
@@ -302,7 +296,7 @@
       zone: 'เขตชานเมือง', inventory: ['ไฟฉาย', 'วิทยุพัง', 'มีดพก'],
       clues: ['ข้อความจากลินกล่าวถึงโรงพยาบาล'], flags: {}, quests: { main: 0, side: [] },
       trust: { lin: 0, mark: 0, shelter: 0 }, kills: 0, ending: null,
-      feed: ['[21:17] คุณฟื้นขึ้นมาท่ามกลางความมืด'], visited: [], zombies: [], steps: 0
+      feed: ['[21:17] คุณฟื้นขึ้นมาท่ามกลางความมืด'], visited: [], zombies: [], steps: 0, facing: 'down'
     };
   }
 
@@ -311,17 +305,20 @@
     document.getElementById('sanity').textContent = Z.sanity;
     document.getElementById('food').textContent = Z.food;
     document.getElementById('ammo').textContent = Z.ammo;
-    document.getElementById('hpbar').style.width = Z.hp + '%';
     document.getElementById('zone').textContent = '📍 ' + Z.zone;
-    document.getElementById('day').textContent = `🌘 วันที่ ${Z.day} · ${clock()}`;
-    document.getElementById('noise').textContent = '🔉 เสียง: ' + (Z.noise > 3 ? 'สูง (อันตราย!)' : 'ต่ำ (ปลอดภัย)');
+    document.getElementById('day').textContent = `🌘 ${Z.day} · ${clock()}`;
+    document.getElementById('noise').textContent = '🔉 เสียง: ' + (Z.noise > 3 ? 'สูง 🚨' : 'ต่ำ 🟢');
     document.getElementById('inventory').innerHTML = Z.inventory.map(i => `<span class="item">${i}</span>`).join('') || 'ว่าง';
     document.getElementById('clues').innerHTML = Z.clues.map(c => '• ' + c).join('<br>');
     document.getElementById('feed').textContent = Z.feed.join('\n');
-    document.getElementById('status').textContent = Z.ending ? 'สถานะ: ' + Z.ending.title : 'สถานะ: กำลังสำรวจ';
+    
+    let q = Z.quests.main;
+    let names = ['เสียงจากชั้นใต้ดิน', 'สัญญาณที่ขาดหาย', 'ทางหนีไม่มีคำตอบ', 'ตามรอยลิน', 'เลือกช่วยใคร', 'รุ่งอรุณ'];
+    let texts = ['หาแบตเตอรี่ให้วิทยุ', 'เลือกเส้นทาง', 'ออกจากเมือง', 'ตามรอยลิน', 'ตัดสินใจช่วย', 'มุ่งสู่สะพาน'];
+    document.getElementById('questName').textContent = names[Math.min(q, names.length - 1)];
+    document.getElementById('questText').textContent = texts[Math.min(q, texts.length - 1)];
   }
 
-  // แปลงพิกัด Isometric
   function toIso(x, y) {
     let screenX = (x - y) * (TILE_W / 2);
     let screenY = (x + y) * (TILE_H / 2);
@@ -329,23 +326,23 @@
   }
 
   function render() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     let playerScreen = toIso(Z.x, Z.y);
     let camX = playerScreen.x - canvas.width / 2;
     let camY = playerScreen.y - canvas.height / 2;
 
-    // 1. วาดพื้นผิวแผนที่ Isometric
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         let iso = toIso(x, y);
-        let sx = iso.x - camX;
-        let sy = iso.y - camY;
+        let sx = iso.x - camX, sy = iso.y - camY;
 
         if (sx < -TILE_W || sx > canvas.width + TILE_W || sy < -TILE_H || sy > canvas.height + TILE_H) continue;
 
         let t = map[y][x];
-        
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(sx + TILE_W / 2, sy + TILE_H / 2);
@@ -368,64 +365,91 @@
       }
     }
 
-    // 2. จัดเรียงเลเยอร์วัตถุตามแกน Y (Y-Sorting) ให้ซ้อนทับกันถูกต้องแบบ 3 มิติ
     let renderList = [];
-
     places.forEach(p => {
       let iso = toIso(p.x + 0.5, p.y + 0.5);
       renderList.push({ type: 'place', y: p.y, x: p.x, sx: iso.x - camX, sy: iso.y - camY, data: p });
     });
-
     Z.zombies.forEach(z => {
       let iso = toIso(z.x, z.y);
       renderList.push({ type: 'zombie', y: z.y, x: z.x, sx: iso.x - camX, sy: iso.y - camY, data: z });
     });
-
     let pIso = toIso(Z.x, Z.y);
     renderList.push({ type: 'player', y: Z.y, x: Z.x, sx: pIso.x - camX, sy: pIso.y - camY });
 
     renderList.sort((a, b) => (a.y + a.x) - (b.y + b.x));
 
-    // 3. วาดวัตถุลงบนจอ
     renderList.forEach(item => {
-      if (item.sx < -60 || item.sx > canvas.width + 60 || item.sy < -60 || item.sy > canvas.height + 60) return;
+      if (item.sx < -80 || item.sx > canvas.width + 80 || item.sy < -80 || item.sy > canvas.height + 80) return;
 
       if (item.type === 'place') {
         let p = item.data;
         ctx.fillStyle = Z.visited.includes(p.id) ? '#9cae8c' : '#d4b36a';
         ctx.beginPath();
-        ctx.arc(item.sx, item.sy - 10, 12, 0, Math.PI * 2);
+        ctx.arc(item.sx, item.sy - 12, 14, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
         ctx.fillStyle = '#101711';
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(p.id === 'hospital' ? 'H' : p.id === 'police' ? 'P' : p.id === 'shelter' ? 'S' : p.id === 'bridge' ? 'B' : p.id === 'lab' ? 'L' : p.id === 'radio' ? 'R' : p.id === 'market' ? 'M' : 'T', item.sx, item.sy - 6);
+        ctx.fillText(p.id === 'hospital' ? 'H' : p.id === 'police' ? 'P' : p.id === 'shelter' ? 'S' : p.id === 'bridge' ? 'B' : p.id === 'lab' ? 'L' : p.id === 'radio' ? 'R' : p.id === 'market' ? 'M' : 'T', item.sx, item.sy - 8);
         ctx.fillStyle = '#f1f2df';
-        ctx.font = '11px system-ui';
-        ctx.fillText(p.name, item.sx, item.sy - 26);
+        ctx.font = 'bold 11px system-ui';
+        ctx.fillText(p.name, item.sx, item.sy - 30);
       } 
       else if (item.type === 'zombie') {
         let z = item.data;
         let typeData = ZOMBIE_TYPES[z.type || 'walker'];
+        
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.beginPath();
+        ctx.ellipse(item.sx, item.sy, z.type === 'brute' ? 14 : 9, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.fillStyle = typeData.color;
         ctx.beginPath();
-        ctx.arc(item.sx, item.sy - 8, z.type === 'brute' ? 14 : 11, 0, Math.PI * 2);
+        ctx.arc(item.sx, item.sy - 12, z.type === 'brute' ? 16 : 11, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = typeData.accent;
+        ctx.lineWidth = 2;
         ctx.stroke();
+
+        ctx.fillStyle = '#ff3333';
+        ctx.fillRect(item.sx - 4, item.sy - 15, 3, 3);
+        ctx.fillRect(item.sx + 1, item.sy - 15, 3, 3);
+
+        ctx.fillStyle = '#ff9999';
+        ctx.font = '9px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText(typeData.name, item.sx, item.sy - 28);
       } 
       else if (item.type === 'player') {
-        ctx.fillStyle = '#d8e5c7';
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
-        ctx.arc(item.sx, item.sy - 12, 13, 0, Math.PI * 2);
+        ctx.ellipse(item.sx, item.sy, 10, 5, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#486e4d';
-        ctx.fillRect(item.sx - 6, item.sy - 8, 12, 14);
-        ctx.fillStyle = '#fff';
+
+        ctx.fillStyle = '#5c4033';
+        ctx.fillRect(item.sx - 8, item.sy - 18, 16, 10);
+
+        ctx.fillStyle = '#3a5a40';
+        ctx.fillRect(item.sx - 7, item.sy - 20, 14, 14);
+
+        ctx.fillStyle = '#f5deb3';
+        ctx.beginPath();
+        ctx.arc(item.sx, item.sy - 24, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#2d3748';
+        ctx.fillRect(item.sx - 7, item.sy - 30, 14, 5);
+
+        ctx.fillStyle = '#e2e8f0';
         ctx.font = 'bold 11px system-ui';
         ctx.textAlign = 'center';
-        ctx.fillText('คุณ', item.sx, item.sy - 28);
+        ctx.fillText('คุณ (ภัค)', item.sx, item.sy - 38);
       }
     });
 
@@ -451,20 +475,23 @@
     }
   }
 
+  // เชื่อมต่อปุ่มเมนูกระเป๋า (Bag Dialog)
+  const bagDlg = document.getElementById('bagDlg');
+  document.getElementById('bagBtn').onclick = () => { bagDlg.showModal(); renderUI(); };
+  document.getElementById('bagClose').onclick = () => bagDlg.close();
+
   document.getElementById('saveTop').onclick = save;
   document.getElementById('loadBtn').onclick = load;
-  document.getElementById('restart').onclick = () => { if (confirm('เริ่มเกมใหม่?')) { Z = initial(); render(); } };
+  document.getElementById('restart').onclick = () => { if (confirm('เริ่มเกมใหม่?')) { Z = initial(); render(); bagDlg.close(); } };
   document.getElementById('interact').onclick = interact;
   document.getElementById('attack').onclick = attack;
   document.getElementById('sneak').onclick = sneak;
-  document.getElementById('mapBtn').onclick = () => show('แผนที่เมือง', places.map(p => `${Z.visited.includes(p.id)?'✓':'○'} ${p.name}`).join('\n'), [['ปิด', () => {}]]);
   document.getElementById('useFood').onclick = () => {
     if (Z.food > 0) { Z.food--; Z.hp = Math.min(100, Z.hp + 12); timePass(5); log('กินอาหาร ฟื้นฟูพลัง'); render(); }
     else show('ไม่มีอาหาร', 'หาเพิ่มที่ตลาดหรือศูนย์พักพิง');
   };
   document.getElementById('dlgClose').onclick = close;
 
-  // ⌨️ ควบคุมผ่านแป้นพิมพ์ (คีย์บอร์ด)
   window.addEventListener('keydown', e => {
     const k = e.key.toLowerCase();
     if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', ' '].includes(k) && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
@@ -479,7 +506,6 @@
     if (k === 'f') attack();
   });
 
-  // 📱 ควบคุมผ่านปุ่ม D-Pad บนมือถือ (ตรงกับทิศทางจอเป๊ะๆ)
   document.querySelectorAll('[data-move]').forEach(b => {
     let [dx, dy] = b.dataset.move.split(',').map(Number);
     let dir = 'up';
@@ -493,7 +519,7 @@
       moveScreenDirection(dir);
       moveHold = setInterval(() => moveScreenDirection(dir), 140);
     });
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => { clearInterval(moveHold); moveHold = null; }));
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => { clearInterval(moveHold); moveHold = null; }))
   });
 
   Z.zombies = [
