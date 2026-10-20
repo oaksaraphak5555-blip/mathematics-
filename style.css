@@ -1,0 +1,279 @@
+:root {
+  --bg: #0b100e;
+  --panel: #141c18;
+  --panel2: #202b24;
+  --line: #405247;
+  --text: #edf2e9;
+  --muted: #a9b8ac;
+  --accent: #d4b36a;
+  --red: #d96a61;
+  --green: #83c78b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ตกแต่งและการป้องกันการดึงจอบนมือถือ */
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Noto Sans Thai", sans-serif;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  color: var(--text);
+  background: #25342a;
+  border: 1px solid #506455;
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+button:active {
+  transform: scale(.98);
+}
+
+button:disabled {
+  opacity: .4;
+}
+
+header {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #111914;
+  border-bottom: 1px solid #34443a;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+h1 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+header small {
+  color: var(--accent);
+}
+
+.wrap {
+  max-width: 1200px;
+  margin: auto;
+  padding: 12px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(260px, .8fr);
+  gap: 12px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  min-width: 0;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/10;
+  background: #18251d;
+  border: 1px solid #526253;
+  border-radius: 10px;
+  image-rendering: pixelated;
+}
+
+.hud {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.chip {
+  font-size: .82rem;
+  border: 1px solid #3e5144;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #101712;
+}
+
+h2 {
+  font-size: 1.02rem;
+  margin: 0 0 8px;
+}
+
+h3 {
+  font-size: .94rem;
+  margin: 12px 0 6px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: .86rem;
+}
+
+#story {
+  white-space: pre-line;
+  min-height: 76px;
+  line-height: 1.65;
+}
+
+.feed {
+  max-height: 150px;
+  overflow: auto;
+  background: #0b110d;
+  border-radius: 8px;
+  padding: 9px;
+  font-size: .84rem;
+  white-space: pre-line;
+  color: #c8d5ca;
+}
+
+.quest {
+  padding: 9px;
+  border: 1px solid #34473a;
+  border-radius: 99px;
+  margin: 6px 0;
+  background: #101712;
+}
+
+.quest strong {
+  color: var(--accent);
+}
+
+.inventory {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.item {
+  font-size: .82rem;
+  background: #0e1510;
+  border: 1px solid #405345;
+  border-radius: 8px;
+  padding: 5px 8px;
+}
+
+.bar {
+  height: 7px;
+  background: #303c33;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.bar span {
+  height: 100%;
+  display: block;
+  background: var(--green);
+  width: 100%;
+}
+
+.bar.red span {
+  background: var(--red);
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 42px);
+  grid-template-rows: repeat(2, 39px);
+  gap: 4px;
+}
+
+.dpad button {
+  padding: 0;
+  font-size: 1.2rem;
+}
+
+.dpad .up { grid-column: 2; }
+.dpad .left { grid-column: 1; grid-row: 2; }
+.dpad .down { grid-column: 2; grid-row: 2; }
+.dpad .right { grid-column: 3; grid-row: 2; }
+
+.controlNote {
+  font-size: .78rem;
+  color: var(--muted);
+  max-width: 220px;
+}
+
+.actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+}
+
+.primary {
+  background: #6b5529;
+  border-color: #b89b5b;
+}
+
+.danger {
+  background: #4b2827;
+  border-color: #96504c;
+}
+
+dialog {
+  width: min(540px, calc(100% - 24px));
+  background: #151e18;
+  color: var(--text);
+  border: 1px solid #586c5c;
+  border-radius: 15px;
+  padding: 18px;
+}
+
+dialog::backdrop {
+  background: #020604c9;
+}
+
+dialog h2 {
+  font-size: 1.15rem;
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+footer {
+  text-align: center;
+  color: #7f9183;
+  font-size: .76rem;
+  padding: 18px;
+}
+
+@media(max-width:780px) {
+  .layout { grid-template-columns: 1fr; }
+  .controls { align-items: flex-start; }
+  .controlNote { max-width: 150px; }
+  header { position: static; }
+}
