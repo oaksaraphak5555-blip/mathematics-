@@ -1,466 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แบบสำรวจความนิยมบะหมี่กึ่งสำเร็จรูป - วิชาคณิตศาสตร์ (ค33101) ม.6</title>
-    <!-- Chart.js สำหรับแสดงกราฟ -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Sarabun', sans-serif;
-        }
-
-        body {
-            background-color: #f3f4f6;
-            color: #1f2937;
-            line-height: 1.6;
-            padding: 20px 10px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .card {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        .header-card {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #2563eb 100%);
-            color: white;
-            text-align: center;
-        }
-
-        .badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.25);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            margin-bottom: 12px;
-            backdrop-filter: blur(4px);
-        }
-
-        h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        h2 {
-            font-size: 20px;
-            color: #3730a3;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #e0e7ff;
-            padding-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .subtitle {
-            font-size: 14px;
-            opacity: 0.95;
-            margin-bottom: 20px;
-        }
-
-        .members-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 15px;
-            border-radius: 12px;
-            text-align: left;
-            font-size: 14px;
-            backdrop-filter: blur(5px);
-        }
-
-        .form-container {
-            position: relative;
-            width: 100%;
-            height: 984px;
-            overflow: hidden;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            background: #fafafa;
-        }
-
-        .form-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .stat-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 28px;
-            font-weight: 700;
-            color: #4f46e5;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            color: #64748b;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 440px;
-            margin: 0 auto 10px auto;
-        }
-
-        .bar-chart-container {
-            position: relative;
-            width: 100%;
-            height: 320px;
-        }
-
-        .picto-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-            font-size: 15px;
-        }
-
-        .picto-label {
-            width: 150px;
-            font-weight: 600;
-            color: #334155;
-        }
-
-        .picto-icons {
-            letter-spacing: 2px;
-            font-size: 18px;
-        }
-
-        ul.summary-list {
-            padding-left: 20px;
-        }
-
-        ul.summary-list li {
-            margin-bottom: 12px;
-            color: #334155;
-        }
-
-        footer {
-            text-align: center;
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 30px;
-            padding-bottom: 20px;
-        }
-
-        .tip-box {
-            background-color: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            padding: 12px 16px;
-            border-radius: 0 8px 8px 0;
-            font-size: 13px;
-            color: #1e40af;
-            margin-bottom: 15px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            background-color: #d1fae5;
-            color: #065f46;
-            margin-left: 5px;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101711">
+  <title>LAST LIGHT: คืนสุดท้ายของมนุษย์</title>
+  <!-- เชื่อมต่อไฟล์ CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div class="container">
-        
-        <!-- Header -->
-        <div class="card header-card">
-            <span class="badge">รายวิชาคณิตศาสตร์ (ค33101) ชั้นมัธยมศึกษาปีที่ 6</span>
-            <h1>แบบสำรวจความนิยมบะหมี่กึ่งสำเร็จรูป</h1>
-            <p class="subtitle">ระบบรวบรวมข้อมูลแบบสำรวจออนไลน์พร้อมรายงานผลการวิเคราะห์สถิติแบบเรียลไทม์</p>
-            
-            <div class="members-grid">
-                <div>1. นายภูริณัฐ ลานตวน</div>
-                <div>2. นายกิตติศักดิ์ ชัยสงค์</div>
-                <div>3. นางสาวสวพัสตร์ บุผู</div>
-                <div>4. นายอักษราภัค กิ่งสุวรรณ์</div>
-            </div>
-        </div>
-
-        <!-- Section 1: Embedded Google Form -->
-        <div class="card">
-            <h2>📝 ทำแบบสอบถามออนไลน์</h2>
-            <div class="tip-box">
-                💡 เมื่อกดส่งคำตอบแล้ว รีเฟรชหน้าเว็บเพื่ออัปเดตข้อมูลและกราฟได้ทันที!
-            </div>
-            
-            <div class="form-container">
-                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdmyP9odIATT7p9qohn_XzuibeSxVOl9Sn2W8Qd_ZhohP7Oyg/viewform?embedded=true" width="640" height="984" frameborder="0" marginheight="0" marginwidth="0">กำลังโหลด…</iframe>
-            </div>
-        </div>
-
-        <!-- Section 2: Overview Stats -->
-        <div class="card">
-            <h2>📊 สรุปข้อมูลภาพรวม <span class="status-badge" id="data-source">กำลังโหลด...</span></h2>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-number" id="total-responses">0</div>
-                    <div class="stat-label">จำนวนผู้ตอบทั้งหมด (คน)</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="top-brand" style="color: #8b5cf6;">-</div>
-                    <div class="stat-label" id="top-brand-percent">แบรนด์ยอดนิยมอันดับ 1</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" style="color: #059669;">7 ยี่ห้อ</div>
-                    <div class="stat-label">ตัวเลือกในการสำรวจ</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 3: Pie Chart -->
-        <div class="card">
-            <h2>🍩 แผนภูมิวงกลมแสดงสัดส่วนความนิยม (Pie Chart)</h2>
-            <div class="chart-container">
-                <canvas id="pieChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Section 4: Bar Chart -->
-        <div class="card">
-            <h2>📊 แผนภูมิแท่งเปรียบเทียบจำนวนผู้เลือก (Bar Chart)</h2>
-            <div class="bar-chart-container">
-                <canvas id="barChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Section 5: Pictogram Chart -->
-        <div class="card">
-            <h2>🍜 แผนภูมิรูปภาพ (Pictogram Chart)</h2>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">* สัญลักษณ์ 🍜 1 ถ้วย แทนจำนวนผู้ตอบ 1 คน</p>
-            
-            <div id="pictogram-list">
-                <!-- Generated dynamically via JS -->
-            </div>
-        </div>
-
-        <!-- Section 6: Summary & Analysis -->
-        <div class="card">
-            <h2>📌 บทสรุปผลการวิเคราะห์ข้อมูลสถิติ</h2>
-            <ul class="summary-list" id="summary-text-list">
-                <li>กำลังประมวลผลข้อมูล...</li>
-            </ul>
-        </div>
-
-        <footer>
-            © 2026 รายงานผลการสำรวจสถิติ | รายวิชาคณิตศาสตร์ (ค33101) ม.6 | ระบบเชื่อมต่อ Google Forms & GitHub Pages
-        </footer>
-
+  <header>
+    <div>
+      <small>SURVIVAL RPG · CHAPTER 01/12</small>
+      <h1>LAST LIGHT: คืนสุดท้ายของมนุษย์</h1>
     </div>
+    <button id="saveTop">💾 บันทึก</button>
+  </header>
 
-    <script>
-        const SHEET_ID = '1Dz9jEmGedcWMln3MG_TLEXiJCkuZDXvEQf972hYdEw0';
-        // ใช้ Google Visualization Endpoint ที่เสถียรที่สุด ไม่ติด CORS
-        const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+  <div class="wrap">
+    <div class="layout">
+      <main class="panel">
+        <canvas id="game" width="800" height="500" aria-label="แผนที่เกมซอมบี้"></canvas>
+        <div class="hud">
+          <span class="chip" id="zone">📍 เขตชานเมือง</span>
+          <span class="chip" id="day">🌘 วันที่ 1 · 21:17</span>
+          <span class="chip" id="noise">🔉 เสียง: ต่ำ</span>
+        </div>
+        <h2 id="sceneTitle">คืนที่ไฟดับ</h2>
+        <div id="story">เมืองอรุณเวสต์เงียบผิดปกติ เสียงไซเรนขาดหายไปเมื่อสามชั่วโมงก่อน คุณตื่นในร้านขายยาที่ถูกปล้น พร้อมวิทยุที่ยังส่งเสียงซ่า ๆ และข้อความจากน้องสาว: “ถ้าได้ยินข้อความนี้ อย่ามาที่โรงพยาบาล… พวกเขารู้แล้วว่าใครเป็นคนเริ่มเรื่องทั้งหมด”</div>
+        
+        <div class="actions">
+          <button id="interact" class="primary">E · สำรวจ / คุย / ใช้ประตู</button>
+          <button id="attack" class="danger">โจมตี</button>
+          <button id="sneak">ย่องเบา</button>
+          <button id="mapBtn">แผนที่</button>
+        </div>
 
-        const BRANDS = ['บูลดัก', 'ไวไว', 'ยำยำ', 'มาม่า', 'OK', 'นิสชิน', 'ควิกส์'];
-        const BRAND_COLORS = [
-            '#8b5cf6', '#f97316', '#ec4899', '#3b82f6', '#10b981', '#eab308', '#06b6d4'
-        ];
+        <div class="controls">
+          <div class="dpad" aria-label="ปุ่มเดิน">
+            <button class="up" data-move="0,-1">▲</button>
+            <button class="left" data-move="-1,0">◀</button>
+            <button class="down" data-move="0,1">▼</button>
+            <button class="right" data-move="1,0">▶</button>
+          </div>
+          <div class="controlNote">เดินด้วยปุ่มลูกศร / WASD หรือปุ่มทิศทางบนจอมือถือ แตะ E เมื่ออยู่ใกล้สิ่งของ คน หรือทางออก</div>
+        </div>
 
-        let pieChartObj = null;
-        let barChartObj = null;
+        <h3>เหตุการณ์ล่าสุด</h3>
+        <div class="feed" id="feed">[21:17] คุณฟื้นขึ้นมาท่ามกลางเสียงไซเรนที่กำลังดับลง</div>
+      </main>
 
-        async function fetchAndRenderData() {
-            let counts = { 'บูลดัก': 0, 'ไวไว': 0, 'ยำยำ': 0, 'มาม่า': 0, 'OK': 0, 'นิสชิน': 0, 'ควิกส์': 0 };
-            let total = 0;
+      <aside>
+        <section class="panel">
+          <h2>ผู้รอดชีวิต</h2>
+          <div class="hud">
+            <span class="chip">❤️ <b id="hp">100</b>/100</span>
+            <span class="chip">🧠 สติ <b id="sanity">86</b></span>
+            <span class="chip">🍖 อาหาร <b id="food">2</b></span>
+            <span class="chip">🔫 กระสุน <b id="ammo">3</b></span>
+          </div>
+          <div class="bar red"><span id="hpbar"></span></div>
 
-            try {
-                const res = await fetch(GVIZ_URL);
-                const text = await res.text();
-                
-                // ตัดข้อความส่วนเกินจาก Google JSONP Response
-                const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                const data = JSON.parse(jsonText);
-                
-                const rows = data.table.rows;
+          <h3>ภารกิจหลัก</h3>
+          <div class="quest">
+            <strong id="questName">เสียงจากชั้นใต้ดิน</strong>
+            <div id="questText" class="small muted">หาแบตเตอรี่ให้วิทยุฉุกเฉิน แล้วตัดสินใจว่าจะตามหาน้องสาวหรือไปยังจุดอพยพ</div>
+          </div>
 
-                rows.forEach(row => {
-                    const rowString = JSON.stringify(row);
-                    let matched = false;
+          <h3>กระเป๋า</h3>
+          <div class="inventory" id="inventory"></div>
 
-                    BRANDS.forEach(brand => {
-                        if (rowString.includes(brand)) {
-                            counts[brand]++;
-                            matched = true;
-                        }
-                    });
+          <h3>คนที่คุณรู้จัก</h3>
+          <div class="small muted" id="people">
+            ลิน — น้องสาว (ไม่ทราบตำแหน่ง)<br>
+            มาร์ค — เจ้าหน้าที่รักษาความปลอดภัย (ยังไม่พบ)
+          </div>
 
-                    if (matched) total++;
-                });
+          <h3>เบาะแส</h3>
+          <div class="small muted" id="clues">• ข้อความจากลินกล่าวถึงโรงพยาบาล</div>
 
-                const percentages = BRANDS.map(b => total > 0 ? ((counts[b] / total) * 100).toFixed(1) : 0);
-                const countValues = BRANDS.map(b => counts[b]);
+          <div class="actions">
+            <button id="useFood">กินอาหาร (+พลัง)</button>
+            <button id="loadBtn">โหลดเกม</button>
+            <button id="restart">เริ่มใหม่</button>
+          </div>
+        </section>
 
-                updateOverview(total, counts, percentages, true);
-                renderCharts(countValues, percentages);
-                renderPictogram(countValues);
-                updateSummaryText(counts, percentages, total);
+        <section class="panel" style="margin-top:12px">
+          <h2>โลกและเวลา</h2>
+          <p class="small muted">โลกเดินต่อเมื่อคุณเคลื่อนที่หรือทำกิจกรรม เสียงดังอาจดึงดูดฝูงติดเชื้อ บางพื้นที่เปิดได้เมื่อมีไอเทมหรือเบาะแส เนื้อเรื่องมีการตัดสินใจและฉากจบต่างกัน</p>
+          <div class="small" id="status">สถานะ: กำลังสำรวจ</div>
+        </section>
+      </aside>
+    </div>
+  </div>
 
-            } catch (err) {
-                console.error("Error loading sheet data:", err);
-                document.getElementById('data-source').innerText = "เชื่อมต่อล้มเหลว";
-            }
-        }
+  <footer>ต้นแบบเกมเล่นในเบราว์เซอร์ · บันทึกไว้ในอุปกรณ์นี้ · ไม่ใช้ API</footer>
 
-        function updateOverview(total, counts, percentages, isSuccess) {
-            document.getElementById('total-responses').innerText = total;
-            document.getElementById('data-source').innerText = isSuccess ? "Live Sync" : "เชื่อมต่อไม่สำเร็จ";
+  <dialog id="dlg">
+    <h2 id="dlgTitle"></h2>
+    <div id="dlgBody" class="small" style="white-space:pre-line;line-height:1.7"></div>
+    <div id="dlgOptions" class="options"></div>
+    <div class="actions">
+      <button id="dlgClose">ปิด</button>
+    </div>
+  </dialog>
 
-            let topBrand = BRANDS[0];
-            let maxCount = counts[BRANDS[0]];
-            BRANDS.forEach(b => {
-                if (counts[b] > maxCount) {
-                    maxCount = counts[b];
-                    topBrand = b;
-                }
-            });
-
-            const topPercent = total > 0 ? ((maxCount / total) * 100).toFixed(1) : 0;
-            document.getElementById('top-brand').innerText = maxCount > 0 ? topBrand : "-";
-            document.getElementById('top-brand-percent').innerText = `แบรนด์ยอดนิยมอันดับ 1 (${topPercent}%)`;
-        }
-
-        function renderCharts(countValues, percentages) {
-            if (pieChartObj) pieChartObj.destroy();
-            if (barChartObj) barChartObj.destroy();
-
-            pieChartObj = new Chart(document.getElementById('pieChart'), {
-                type: 'pie',
-                data: {
-                    labels: BRANDS,
-                    datasets: [{
-                        data: percentages,
-                        backgroundColor: BRAND_COLORS,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { font: { family: 'Sarabun', size: 13 } } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) {
-                                    return ` ${ctx.label}: ${ctx.raw}% (${countValues[ctx.dataIndex]} คน)`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            barChartObj = new Chart(document.getElementById('barChart'), {
-                type: 'bar',
-                data: {
-                    labels: BRANDS,
-                    datasets: [{
-                        label: 'จำนวนผู้เลือก (คน)',
-                        data: countValues,
-                        backgroundColor: BRAND_COLORS,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) {
-                                    return ` จำนวนผู้เลือก: ${ctx.raw} คน`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: { ticks: { font: { family: 'Sarabun', size: 13 } } },
-                        y: { beginAtZero: true, ticks: { font: { family: 'Sarabun', size: 12 }, stepSize: 1 } }
-                    }
-                }
-            });
-        }
-
-        function renderPictogram(countValues) {
-            const container = document.getElementById('pictogram-list');
-            container.innerHTML = '';
-            
-            BRANDS.forEach((brand, idx) => {
-                const count = countValues[idx];
-                const icons = '🍜'.repeat(count);
-                
-                const item = document.createElement('div');
-                item.className = 'picto-item';
-                item.innerHTML = `
-                    <div class="picto-label">${brand} (${count} คน)</div>
-                    <div class="picto-icons">${icons || '-'}</div>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        function updateSummaryText(counts, percentages, total) {
-            const sorted = BRANDS.map((b, i) => ({ brand: b, count: counts[b], percent: percentages[i] }))
-                                .sort((a, b) => b.count - a.count);
-
-            const list = document.getElementById('summary-text-list');
-            if (total === 0) {
-                list.innerHTML = `<li>ยังไม่มีผู้ตอบแบบสอบถาม</li>`;
-                return;
-            }
-
-            list.innerHTML = `
-                <li><strong>อันดับ 1 ที่ได้รับความนิยมสูงสุด:</strong> <strong>${sorted[0].brand}</strong> มีผู้เลือก <strong>${sorted[0].count} คน (${sorted[0].percent}%)</strong></li>
-                <li><strong>อันดับรองลงมา:</strong> <strong>${sorted[1].brand}</strong> (${sorted[1].percent}%) และ <strong>${sorted[2].brand}</strong> (${sorted[2].percent}%) ตามลำดับ</li>
-                <li><strong>แบรนด์อื่นๆ:</strong> ${sorted.slice(3).map(item => `${item.brand} (${item.percent}%)`).join(', ')}</li>
-            `;
-        }
-
-        window.onload = function() {
-            fetchAndRenderData();
-        };
-    </script>
+  <!-- เชื่อมต่อไฟล์ JavaScript -->
+  <script src="game.js"></script>
 </body>
 </html>
-
