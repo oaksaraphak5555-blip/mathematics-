@@ -2,111 +2,96 @@
 <html lang="th">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#101711">
   <title>LAST LIGHT: คืนสุดท้ายของมนุษย์</title>
-  <!-- เชื่อมต่อไฟล์ CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
+  <!-- HUD ด้านบนสุด -->
+  <header class="top-hud">
     <div>
-      <small>SURVIVAL RPG · CHAPTER 01/12</small>
-      <h1>LAST LIGHT: คืนสุดท้ายของมนุษย์</h1>
+      <span class="chip" id="zone">📍 ชานเมือง</span>
+      <span class="chip" id="day">🌘 1 · 21:17</span>
     </div>
-    <button id="saveTop">💾 บันทึก</button>
+    <div class="top-btns">
+      <button id="bagBtn" class="bag-btn">🎒 กระเป๋า</button>
+      <button id="saveTop">💾</button>
+    </div>
   </header>
 
-  <div class="wrap">
-    <div class="layout">
-      <main class="panel">
-        <canvas id="game" width="800" height="500" aria-label="แผนที่เกมซอมบี้"></canvas>
-        <div class="hud">
-          <span class="chip" id="zone">📍 เขตชานเมือง</span>
-          <span class="chip" id="day">🌘 วันที่ 1 · 21:17</span>
-          <span class="chip" id="noise">🔉 เสียง: ต่ำ</span>
-        </div>
-        <h2 id="sceneTitle">คืนที่ไฟดับ</h2>
-        <div id="story">เมืองอรุณเวสต์เงียบผิดปกติ เสียงไซเรนขาดหายไปเมื่อสามชั่วโมงก่อน คุณตื่นในร้านขายยาที่ถูกปล้น พร้อมวิทยุที่ยังส่งเสียงซ่า ๆ และข้อความจากน้องสาว: “ถ้าได้ยินข้อความนี้ อย่ามาที่โรงพยาบาล… พวกเขารู้แล้วว่าใครเป็นคนเริ่มเรื่องทั้งหมด”</div>
-        
-        <div class="actions">
-          <button id="interact" class="primary">E · สำรวจ / คุย / ใช้ประตู</button>
-          <button id="attack" class="danger">โจมตี</button>
-          <button id="sneak">ย่องเบา</button>
-          <button id="mapBtn">แผนที่</button>
-        </div>
-
-        <div class="controls">
-          <div class="dpad" aria-label="ปุ่มเดิน">
-            <button class="up" data-move="0,-1">▲</button>
-            <button class="left" data-move="-1,0">◀</button>
-            <button class="down" data-move="0,1">▼</button>
-            <button class="right" data-move="1,0">▶</button>
-          </div>
-          <div class="controlNote">เดินด้วยปุ่มลูกศร / WASD หรือปุ่มทิศทางบนจอมือถือ แตะ E เมื่ออยู่ใกล้สิ่งของ คน หรือทางออก</div>
-        </div>
-
-        <h3>เหตุการณ์ล่าสุด</h3>
-        <div class="feed" id="feed">[21:17] คุณฟื้นขึ้นมาท่ามกลางเสียงไซเรนที่กำลังดับลง</div>
-      </main>
-
-      <aside>
-        <section class="panel">
-          <h2>ผู้รอดชีวิต</h2>
-          <div class="hud">
-            <span class="chip">❤️ <b id="hp">100</b>/100</span>
-            <span class="chip">🧠 สติ <b id="sanity">86</b></span>
-            <span class="chip">🍖 อาหาร <b id="food">2</b></span>
-            <span class="chip">🔫 กระสุน <b id="ammo">3</b></span>
-          </div>
-          <div class="bar red"><span id="hpbar"></span></div>
-
-          <h3>ภารกิจหลัก</h3>
-          <div class="quest">
-            <strong id="questName">เสียงจากชั้นใต้ดิน</strong>
-            <div id="questText" class="small muted">หาแบตเตอรี่ให้วิทยุฉุกเฉิน แล้วตัดสินใจว่าจะตามหาน้องสาวหรือไปยังจุดอพยพ</div>
-          </div>
-
-          <h3>กระเป๋า</h3>
-          <div class="inventory" id="inventory"></div>
-
-          <h3>คนที่คุณรู้จัก</h3>
-          <div class="small muted" id="people">
-            ลิน — น้องสาว (ไม่ทราบตำแหน่ง)<br>
-            มาร์ค — เจ้าหน้าที่รักษาความปลอดภัย (ยังไม่พบ)
-          </div>
-
-          <h3>เบาะแส</h3>
-          <div class="small muted" id="clues">• ข้อความจากลินกล่าวถึงโรงพยาบาล</div>
-
-          <div class="actions">
-            <button id="useFood">กินอาหาร (+พลัง)</button>
-            <button id="loadBtn">โหลดเกม</button>
-            <button id="restart">เริ่มใหม่</button>
-          </div>
-        </section>
-
-        <section class="panel" style="margin-top:12px">
-          <h2>โลกและเวลา</h2>
-          <p class="small muted">โลกเดินต่อเมื่อคุณเคลื่อนที่หรือทำกิจกรรม เสียงดังอาจดึงดูดฝูงติดเชื้อ บางพื้นที่เปิดได้เมื่อมีไอเทมหรือเบาะแส เนื้อเรื่องมีการตัดสินใจและฉากจบต่างกัน</p>
-          <div class="small" id="status">สถานะ: กำลังสำรวจ</div>
-        </section>
-      </aside>
+  <!-- หน้าจอเกมหลักเต็มจอ -->
+  <div class="game-container">
+    <canvas id="game" width="800" height="500" aria-label="แผนที่เกม"></canvas>
+    
+    <!-- แถบสถานะด่วนบนจอ -->
+    <div class="quick-status">
+      <span class="chip red-text">❤️ <b id="hp">100</b></span>
+      <span class="chip">🧠 <b id="sanity">86</b></span>
+      <span class="chip">🍖 <b id="food">2</b></span>
+      <span class="chip">🔫 <b id="ammo">3</b></span>
+      <span class="chip" id="noise">🔉 เสียง: ต่ำ</span>
     </div>
   </div>
 
-  <footer>ต้นแบบเกมเล่นในเบราว์เซอร์ · บันทึกไว้ในอุปกรณ์นี้ · ไม่ใช้ API</footer>
+  <!-- ปุ่มควบคุมเสมือนจริงลอยด้านล่าง (Virtual Controls) -->
+  <div class="bottom-controls">
+    <div class="dpad" aria-label="ปุ่มเดิน">
+      <button class="up" data-move="0,-1">▲</button>
+      <button class="left" data-move="-1,0">◀</button>
+      <button class="down" data-move="0,1">▼</button>
+      <button class="right" data-move="1,0">▶</button>
+    </div>
+    <div class="action-buttons">
+      <button id="interact" class="primary">E · สำรวจ</button>
+      <button id="attack" class="danger">💥 โจมตี</button>
+      <button id="sneak">🤫 ย่อง</button>
+      <button id="useFood">🍖 กิน</button>
+    </div>
+  </div>
 
+  <!-- หน้าต่างป๊อปอัปเมนูกระเป๋า / สเตตัส / ภารกิจ -->
+  <dialog id="bagDlg" class="bag-dialog">
+    <div class="bag-header">
+      <h2>🎒 เมนู & กระเป๋าผู้รอดชีวิต</h2>
+      <button id="bagClose" class="close-btn">✕</button>
+    </div>
+    <div class="bag-body">
+      <h3>ภารกิจหลัก</h3>
+      <div class="quest">
+        <strong id="questName">เสียงจากชั้นใต้ดิน</strong>
+        <div id="questText" class="small muted">หาแบตเตอรี่ให้วิทยุฉุกเฉิน</div>
+      </div>
+
+      <h3>กระเป๋าไอเทม</h3>
+      <div class="inventory" id="inventory"></div>
+
+      <h3>คนที่คุณรู้จัก</h3>
+      <div class="small muted" id="people">ลิน — น้องสาว<br>มาร์ค — รปภ.</div>
+
+      <h3>เบาะแสสำคัญ</h3>
+      <div class="small muted" id="clues">• ข้อความจากลิน</div>
+
+      <h3>เหตุการณ์ล่าสุด</h3>
+      <div class="feed" id="feed">[21:17] ฟื้นขึ้นมาท่ามกลางความมืด</div>
+
+      <div class="actions" style="margin-top: 14px;">
+        <button id="loadBtn">📥 โหลดเกม</button>
+        <button id="restart" class="danger">🔄 เริ่มใหม่</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ไดอะล็อกเนื้อเรื่อง / เหตุการณ์เกม -->
   <dialog id="dlg">
     <h2 id="dlgTitle"></h2>
-    <div id="dlgBody" class="small" style="white-space:pre-line;line-height:1.7"></div>
+    <div id="dlgBody" class="small" style="white-space:pre-line;line-height:1.6"></div>
     <div id="dlgOptions" class="options"></div>
     <div class="actions">
       <button id="dlgClose">ปิด</button>
     </div>
   </dialog>
 
-  <!-- เชื่อมต่อไฟล์ JavaScript -->
-  <script src="game.js?v=4"></script>
+  <script src="game.js?v=6"></script>
 </body>
 </html>
