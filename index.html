@@ -1,36 +1,21 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>My RPG</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My RPG - Step 1</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="hud">
-  <span id="hudHP"></span>
-  <span id="hudLv"></span>
-  <span id="hudCoin"></span>
-</div>
+<div id="status">กำลังโหลด...</div>
 <canvas id="map" width="360" height="360"></canvas>
 <div id="dpad">
-  <button data-d="up">▲</button>
+  <button id="up">▲</button>
   <div>
-    <button data-d="left">◀</button>
-    <button data-d="down">▼</button>
-    <button data-d="right">▶</button>
-  </div>
-</div>
-
-<div id="battle" class="hidden">
-  <div id="enemyHPText"></div>
-  <div id="enemyIcon"></div>
-  <div id="heroHPText"></div>
-  <div id="battleText"></div>
-  <div id="buttons">
-    <button id="attackBtn">โจมตี</button>
-    <button id="healBtn">ใช้ยา</button>
-    <button id="fleeBtn">หนี</button>
+    <button id="left">◀</button>
+    <button id="down">▼</button>
+    <button id="right">▶</button>
   </div>
 </div>
 <script src="game.js"></script>
