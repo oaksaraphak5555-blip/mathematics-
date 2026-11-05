@@ -1,107 +1,28 @@
-:root {
-  --bg: #0b100e;
-  --panel: #141c18;
-  --line: #304237;
-  --text: #edf2e9;
-  --muted: #a9b8ac;
-  --accent: #d4b36a;
-  --red: #d96a61;
-  --green: #83c78b;
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0; background: #1b1b2f; color: #fff;
+  font-family: sans-serif; display: flex; flex-direction: column;
+  align-items: center; min-height: 100vh; touch-action: manipulation;
 }
-
-* { box-sizing: border-box; }
-
-html, body {
-  margin: 0; padding: 0;
-  width: 100vw; height: 100vh; height: 100dvh;
-  background: var(--bg); color: var(--text);
-  font-family: system-ui, -apple-system, sans-serif;
-  overflow: hidden;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
+#hud { display: flex; gap: 16px; padding: 10px; font-size: 16px; }
+canvas { background: #2d5a27; border: 3px solid #444; max-width: 95vw; height: auto; }
+#dpad { margin-top: 12px; text-align: center; }
+#dpad button {
+  width: 64px; height: 64px; margin: 3px; font-size: 24px;
+  border-radius: 12px; border: none; background: #4b3f9e; color: #fff;
 }
-
-/* แถบ HUD ด้านบน */
-.top-hud {
-  position: fixed; top: 0; left: 0; width: 100%;
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 12px; background: rgba(17, 25, 20, 0.9);
-  border-bottom: 1px solid var(--line); z-index: 10;
+#dpad button:active { background: #6a5ce0; }
+#battle {
+  position: fixed; inset: 0; background: #1b1b2f;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 14px; padding: 20px; text-align: center;
 }
-.top-btns { display: flex; gap: 6px; }
-.bag-btn { background: #6b5529; border-color: #b89b5b; font-weight: bold; }
-
-/* พื้นที่จอเกม Canvas เต็มจอ */
-.game-container {
-  position: absolute; top: 48px; bottom: 130px; left: 0; right: 0;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  background: #111a14;
+#battle.hidden { display: none; }
+#enemyIcon { font-size: 90px; }
+#battleText { min-height: 48px; font-size: 18px; color: #ffd966; }
+#buttons { display: flex; gap: 10px; }
+#buttons button {
+  padding: 14px 22px; font-size: 18px; border: none;
+  border-radius: 10px; background: #4b3f9e; color: #fff;
 }
-canvas {
-  width: 100%; height: 100%; object-fit: cover;
-  image-rendering: pixelated;
-}
-
-/* สเตตัสด่วนลอยบนจอ */
-.quick-status {
-  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
-  display: flex; gap: 4px; pointer-events: none; width: 95%; max-width: 400px;
-  justify-content: center;
-}
-.chip {
-  font-size: .75rem; border: 1px solid var(--line); border-radius: 999px;
-  padding: 2px 7px; background: rgba(16, 23, 18, 0.85); backdrop-filter: blur(4px);
-}
-.red-text { color: var(--red); }
-
-/* ปุ่มควบคุมลอยด้านล่างมือถือ */
-.bottom-controls {
-  position: fixed; bottom: 0; left: 0; width: 100%; height: 130px;
-  background: rgba(14, 22, 17, 0.95); border-top: 1px solid var(--line);
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 12px; z-index: 10; gap: 10px;
-}
-.dpad {
-  display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(2, 40px);
-  gap: 3px; flex-shrink: 0;
-}
-.dpad button {
-  padding: 0; font-size: 1.1rem; background: #1c2b21; border: 1px solid #3c5243;
-  border-radius: 8px; color: var(--text);
-}
-.dpad .up { grid-column: 2; }
-.dpad .left { grid-column: 1; grid-row: 2; }
-.dpad .down { grid-column: 2; grid-row: 2; }
-.dpad .right { grid-column: 3; grid-row: 2; }
-
-.action-buttons {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; flex-grow: 1;
-}
-.action-buttons button {
-  padding: 10px 4px; font-size: 0.85rem; border-radius: 8px; font-weight: bold;
-  background: #25342a; border: 1px solid #506455; color: var(--text);
-}
-.primary { background: #5c4722 !important; border-color: #a38240 !important; }
-.danger { background: #4b2827 !important; border-color: #96504c !important; }
-
-/* หน้าต่างป๊อปอัปเมนูกระเป๋า */
-dialog {
-  width: min(92vw, 460px); max-height: 85vh;
-  background: #141c18; color: var(--text); border: 1px solid #4a6350;
-  border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-}
-dialog::backdrop { background: rgba(2, 6, 4, 0.85); backdrop-filter: blur(5px); }
-.bag-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px; }
-.bag-header h2 { font-size: 1.1rem; margin: 0; color: var(--accent); }
-.close-btn { background: none; border: none; font-size: 1.2rem; color: var(--muted); cursor: pointer; }
-.bag-body { overflow-y: auto; max-height: 65vh; padding-right: 4px; }
-.bag-body h3 { font-size: 0.9rem; margin: 10px 0 4px; color: var(--accent); }
-
-.inventory { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-.item { font-size: .8rem; background: #0e1510; border: 1px solid #405345; border-radius: 6px; padding: 4px 8px; }
-.quest { padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #101712; }
-.feed { max-height: 110px; overflow-y: auto; background: #0b110d; border-radius: 6px; padding: 8px; font-size: .78rem; white-space: pre-line; color: #c8d5ca; }
-
-.actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.actions button { flex: 1; padding: 8px; border-radius: 8px; background: #25342a; border: 1px solid #506455; color: var(--text); font-size: 0.85rem; }
+#buttons button:disabled { opacity: .4; }
