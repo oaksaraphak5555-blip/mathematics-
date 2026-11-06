@@ -1,263 +1,218 @@
 <!doctype html>
-<html lang="th">
+<html lang="th" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ภาพจำลองฝนหลวง</title>
-<style>
-:root{--bg:#fff;--fg:#1f1f1e;--muted:#6b6a65;--ok:#3B6D11;--card:#f4f3ee;--line:#c9c7bd}
-@media (prefers-color-scheme:dark){:root{--bg:#1f1f1e;--fg:#f1efe8;--muted:#a8a69c;--ok:#97C459;--card:#2c2c2a;--line:#5f5e5a}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,"Noto Sans Thai","Sarabun",sans-serif}
-main{max-width:440px;margin:0 auto;padding:16px}
-h1{font-size:20px;font-weight:500;margin:0 0 8px}
-.pl{cursor:grab;touch-action:none}
-.pl:active{cursor:grabbing}
-#hz{transition:opacity .6s}
-@media (prefers-reduced-motion:no-preference){
-.wd{animation:up 2s linear infinite}
-.dw{animation:drift 60s ease-in-out infinite alternate}
-.bd{animation:fly 30s linear infinite}
-}
-@keyframes up{0%{transform:translateY(10px);opacity:0}30%{opacity:1}100%{transform:translateY(-10px);opacity:0}}
-@keyframes drift{from{transform:translateX(0)}to{transform:translateX(50px)}}
-@keyframes fly{from{transform:translateX(-30px)}to{transform:translateX(400px)}}
-.row{display:flex;align-items:center;gap:8px;font-size:14px;padding:3px 0}
-.row b{width:16px;text-align:center;font-weight:500}
-.btn{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer}
-.ctl{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:14px}
-.ctl input{flex:1}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eaf4ff">
+<title>ห้องปฏิบัติการจำลองฝนหลวง</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main>
-<h1>ภาพจำลองฝนหลวง</h1>
-<svg id="sc" width="100%" viewBox="0 0 380 430" role="img"><title>ภาพจำลองฝนหลวงแบบสมจริง</title><desc>ทิวทัศน์ท้องทุ่งแห้งแล้ง เมฆก่อตัวและโตขึ้นเมื่อวางเครื่องบินสามลำตามขั้นตอน แล้วฝนตกทำให้ทุ่งเขียวและน้ำในบ่อเพิ่มขึ้น</desc>
-<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B5D4F4"/><stop offset="1" stop-color="#E6F1FB"/></linearGradient></defs>
-<rect x="10" y="10" width="360" height="370" fill="url(#sky)"/>
-<circle cx="332" cy="46" r="22" fill="#FAC775" fill-opacity="0.3"/>
-<circle cx="332" cy="46" r="14" fill="#FAC775"/>
-<g class="dw"><ellipse cx="60" cy="38" rx="26" ry="6" fill="#FFFFFF" fill-opacity="0.75"/><ellipse cx="74" cy="33" rx="16" ry="6" fill="#FFFFFF" fill-opacity="0.75"/><ellipse cx="250" cy="28" rx="22" ry="5" fill="#FFFFFF" fill-opacity="0.6"/></g>
-<g transform="translate(0,62)"><g class="bd"><path d="M0 0 q4 -5 8 0 q4 -5 8 0" fill="none" stroke="#444441" stroke-width="1.2"/><path d="M26 8 q3 -4 6 0 q3 -4 6 0" fill="none" stroke="#444441" stroke-width="1.2"/></g></g>
-<polygon points="10,372 55,318 95,348 145,296 205,350 255,312 315,348 370,322 370,380 10,380" fill="#9DB4C4"/>
-<polygon points="145,296 132,312 140,308 148,316 156,308 160,312" fill="#F1EFE8" fill-opacity="0.8"/>
-<path d="M10 372 Q90 332 170 358 T300 346 T370 358 V380 H10 Z" fill="#7FA860"/>
-<path d="M10 380 Q70 352 130 366 T240 362 T370 368 V380 H10 Z" fill="#5E8F3A"/>
-<g id="trees"></g>
-<rect x="10" y="380" width="360" height="40" fill="#C9A66B"/>
-<rect id="grn" x="10" y="380" width="360" height="40" fill="#639922" fill-opacity="0"/>
-<g id="crops"></g>
-<ellipse id="pond" cx="318" cy="402" rx="22" ry="5" fill="#85B7EB" stroke="#378ADD" stroke-width="0.5"/>
-<rect id="dim" x="10" y="10" width="360" height="370" fill="#444441" fill-opacity="0"/>
-<line id="fzl" x1="10" y1="80" x2="370" y2="80" stroke="#378ADD" stroke-width="0.8" stroke-dasharray="5 4"/>
-<text id="fzt" x="14" y="73" style="fill:#0C447C;font-size:12px">ระดับ 0°C</text>
-<g id="hz" opacity="0">
-<g transform="translate(50,0)"><g class="wd"><path d="M0 376 q6 -6 12 0 t12 0 t12 0 t12 0" fill="none" stroke="#BA7517" stroke-width="1.2" stroke-opacity="0.7"/></g></g>
-<g transform="translate(150,0)"><g class="wd" style="animation-delay:-0.7s"><path d="M0 376 q6 -6 12 0 t12 0 t12 0 t12 0" fill="none" stroke="#BA7517" stroke-width="1.2" stroke-opacity="0.7"/></g></g>
-<g transform="translate(250,0)"><g class="wd" style="animation-delay:-1.3s"><path d="M0 376 q6 -6 12 0 t12 0 t12 0 t12 0" fill="none" stroke="#BA7517" stroke-width="1.2" stroke-opacity="0.7"/></g></g>
-</g>
-<g id="cl"></g><g id="ice"></g><g id="vap"></g><g id="rn"></g><g id="rp"></g><g id="tr"></g><g id="pls"></g>
-</svg>
-<div style="padding:8px 0 4px">
-<div class="row"><b id="i0">○</b><span>1 ก่อกวน: วางไว้ใต้ฐานเมฆ (โปรยเกลือ)</span></div>
-<div class="row"><b id="i1">○</b><span>2 เลี้ยงให้อ้วน: วางที่ฐานเมฆ (โปรยยูเรีย)</span></div>
-<div class="row"><b id="i2">○</b><span id="s3">3 โจมตี: วางที่ยอดเมฆ</span></div>
-<div class="row" style="color:var(--muted)" id="msg">ลากเครื่องบินจากพื้นขึ้นไปวางได้เลย</div>
-<div class="row" style="color:var(--muted);font-size:13px">เส้นประสีฟ้า = ระดับ 0°C ถ้ายอดเมฆสูงเกินเส้นนี้ ถือเป็นเมฆเย็น</div>
-</div>
-<div class="ctl"><label for="bh" style="white-space:nowrap">ความสูงฐานเมฆ</label><input type="range" id="bh" min="0" max="50" step="1" value="35"></div>
-<div style="display:flex;gap:8px;padding:6px 0 10px">
-<button class="btn" id="auto">▶ เล่นอัตโนมัติ</button>
-<button class="btn" id="reset">↻ รีเซ็ต</button>
-</div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">☁</div>
+    <div>
+      <div class="eyebrow">LEARNING SIMULATOR</div>
+      <h1>ห้องปฏิบัติการจำลองฝนหลวง</h1>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="btn" id="themeBtn">🌙 โหมดมืด</button>
+    <button class="btn" id="fullscreenBtn">⛶ เต็มจอ</button>
+  </div>
+</header>
+
+<main class="layout">
+
+<section class="scene-panel panel">
+  <div class="panel-heading">
+    <div>
+      <div class="eyebrow">LIVE WEATHER SCENE</div>
+      <h2>ภาพจำลองสภาพอากาศ</h2>
+    </div>
+    <span class="live-pill">● จำลองแบบเรียลไทม์</span>
+  </div>
+
+  <div class="scene-wrap">
+    <svg id="scene" viewBox="0 0 900 560">
+      <defs>
+        <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#8ec5f4"/>
+          <stop offset="1" stop-color="#e9f5ff"/>
+        </linearGradient>
+        <linearGradient id="groundGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#b6a06d"/>
+          <stop offset="1" stop-color="#80633d"/>
+        </linearGradient>
+        <filter id="cloudShadow">
+          <feGaussianBlur stdDeviation="7"/>
+        </filter>
+      </defs>
+
+      <rect width="900" height="560" fill="url(#skyGradient)"/>
+      <circle cx="785" cy="82" r="35" fill="#ffe39a"/>
+
+      <g opacity=".5" fill="#fff">
+        <ellipse cx="140" cy="95" rx="72" ry="15"/>
+        <ellipse cx="178" cy="88" rx="40" ry="19"/>
+        <ellipse cx="660" cy="145" rx="58" ry="12"/>
+        <ellipse cx="695" cy="138" rx="32" ry="17"/>
+      </g>
+
+      <path d="M0 405 L120 325 L220 390 L350 300 L485 390 L610 320 L760 390 L900 330 L900 560 L0 560Z" fill="#a7bac3"/>
+      <path d="M0 435 Q170 390 330 425 T650 415 T900 420 L900 560 L0 560Z" fill="#668b55"/>
+      <path d="M0 470 Q190 435 370 466 T700 455 T900 470 L900 560 L0 560Z" fill="url(#groundGradient)"/>
+
+      <path id="greenField" d="M0 470 Q190 435 370 466 T700 455 T900 470 L900 560 L0 560Z" fill="#55a64b" opacity="0"/>
+      <path id="pond" d="M720 490 Q770 475 830 492 Q790 520 730 510Z" fill="#60b8e8" opacity=".65"/>
+
+      <g id="cloudShadow" opacity=".12" filter="url(#cloudShadow)">
+        <ellipse cx="450" cy="260" rx="190" ry="55" fill="#263747"/>
+      </g>
+
+      <g id="cloud" transform="translate(450 270) scale(.65)">
+        <ellipse cx="0" cy="0" rx="170" ry="58" fill="#fff"/>
+        <ellipse cx="-90" cy="-20" rx="78" ry="70" fill="#fff"/>
+        <ellipse cx="0" cy="-65" rx="88" ry="95" fill="#fff"/>
+        <ellipse cx="90" cy="-25" rx="88" ry="72" fill="#fff"/>
+        <ellipse cx="15" cy="-120" rx="58" ry="72" fill="#fff"/>
+        <ellipse cx="-25" cy="-10" rx="150" ry="42" fill="#f6f8fb"/>
+      </g>
+
+      <g id="cloudTopLabel" class="scene-label">
+        <rect x="22" y="18" width="180" height="34" rx="10"/>
+        <text x="36" y="40">ยอดเมฆ: — ฟุต</text>
+      </g>
+
+      <line id="zeroLine" x1="0" x2="900" y1="205" y2="205" stroke="#287bb8" stroke-width="2" stroke-dasharray="10 8"/>
+      <text x="18" y="194" class="line-label">ระดับอ้างอิง 0°C</text>
+
+      <g id="rainLayer"></g>
+      <g id="aircraftLayer"></g>
+
+      <g class="scene-label">
+        <rect x="20" y="510" width="210" height="32" rx="9"/>
+        <text x="34" y="531">พื้นที่เกษตรจำลอง</text>
+      </g>
+    </svg>
+
+    <div class="scene-legend">
+      <span>☁ เมฆ</span>
+      <span>┄ ระดับอ้างอิง 0°C</span>
+      <span>💧 ฝนจำลอง</span>
+    </div>
+  </div>
+
+  <div class="scene-footer">
+    <div class="metric"><span>สถานะเมฆ</span><strong id="cloudStatus">ยังไม่ก่อตัว</strong></div>
+    <div class="metric"><span>ความสูงฐานเมฆ</span><strong id="baseReadout">5,000 ฟุต</strong></div>
+    <div class="metric"><span>ความสูงยอดเมฆ</span><strong id="topReadout">—</strong></div>
+    <div class="metric"><span>ปริมาณฝนจำลอง</span><strong id="rainReadout">0 มม.</strong></div>
+  </div>
+</section>
+
+<aside class="control-column">
+
+<section class="panel controls">
+  <div class="panel-heading">
+    <div>
+      <div class="eyebrow">MISSION CONTROL</div>
+      <h2>แผงควบคุมภารกิจ</h2>
+    </div>
+    <span class="status-badge" id="missionStatus">รอเริ่ม</span>
+  </div>
+
+  <div class="stage-list">
+
+    <article class="stage-card" id="stageCard1">
+      <div class="stage-number">1</div>
+      <div class="stage-copy">
+        <h3>ก่อกวน</h3>
+        <p>จำลองการส่งเสริมการเกิดแกนควบแน่นในบริเวณเมฆที่เหมาะสม</p>
+        <small>ตัวอย่างสารในบทเรียน: เกลือแกง (NaCl)</small>
+      </div>
+      <span class="stage-state" id="stageState1">รอ</span>
+    </article>
+
+    <article class="stage-card" id="stageCard2">
+      <div class="stage-number">2</div>
+      <div class="stage-copy">
+        <h3>เลี้ยงให้อ้วน</h3>
+        <p>จำลองการเพิ่มการเติบโตและพัฒนาตัวของเมฆ</p>
+        <small>ตัวอย่างสารในบทเรียน: สารดูดความชื้น เช่น CaCl₂</small>
+      </div>
+      <span class="stage-state" id="stageState2">รอ</span>
+    </article>
+
+    <article class="stage-card" id="stageCard3">
+      <div class="stage-number">3</div>
+      <div class="stage-copy">
+        <h3>โจมตี</h3>
+        <p>จำลองการส่งเสริมกระบวนการรวมตัวของหยดน้ำหรือผลึกน้ำแข็ง</p>
+        <small>แนวคิดสารก่อเมฆ: แตกต่างตามชนิดเมฆและสภาพอากาศ</small>
+      </div>
+      <span class="stage-state" id="stageState3">รอ</span>
+    </article>
+
+  </div>
+
+  <div class="info-box">
+    <div class="info-title">🔬 ข้อมูลทางวิทยาศาสตร์</div>
+    <strong id="scienceStage">ยังไม่ได้เริ่มขั้นตอน</strong>
+    <p id="scienceMaterial">สารตัวอย่าง: —</p>
+    <p id="scienceRole">หน้าที่: เลือกขั้นตอนเพื่อดูคำอธิบาย</p>
+    <p id="scienceCloud">สภาพเมฆ: —</p>
+    <p class="fine-print">สารที่แสดงเป็นตัวอย่างเพื่อการเรียนรู้ ไม่ใช่สูตรปฏิบัติการจริง</p>
+  </div>
+</section>
+
+<section class="panel settings">
+  <div class="panel-heading">
+    <div>
+      <div class="eyebrow">ATMOSPHERE</div>
+      <h2>สภาพบรรยากาศ</h2>
+    </div>
+  </div>
+
+  <label class="range-label" for="baseAltitude">
+    ความสูงฐานเมฆ <output id="baseValue">5,000 ฟุต</output>
+  </label>
+  <input id="baseAltitude" type="range" min="3000" max="9000" step="250" value="5000">
+
+  <label class="range-label" for="humidity">
+    ความชื้นสัมพัทธ์ <output id="humidityValue">65%</output>
+  </label>
+  <input id="humidity" type="range" min="20" max="100" value="65">
+
+  <label class="range-label" for="wind">
+    ความเร็วลม <output id="windValue">12 กม./ชม.</output>
+  </label>
+  <input id="wind" type="range" min="0" max="40" value="12">
+
+  <div class="weather-grid">
+    <div><span>อุณหภูมิฐานเมฆ</span><strong id="temperature">—</strong></div>
+    <div><span>ทิศทางลม</span><strong id="windDirection">ตะวันออกเฉียงใต้</strong></div>
+    <div><span>ระดับ 0°C</span><strong>18,000 ฟุต*</strong></div>
+    <div><span>สภาพเมฆ</span><strong id="cloudType">เมฆก่อตัว</strong></div>
+  </div>
+
+  <p class="fine-print">*เป็นค่าตั้งต้นสมมติในแบบจำลอง ไม่ใช่ค่าพยากรณ์จริง</p>
+</section>
+
+<section class="panel actions">
+  <div class="action-row">
+    <button class="btn btn-primary" id="autoBtn">▶ เริ่มจำลองอัตโนมัติ</button>
+    <button class="btn" id="resetBtn">↻ รีเซ็ต</button>
+  </div>
+  <p class="hint">ลากเครื่องบินในภาพไปยังบริเวณเมฆ หรือใช้ปุ่มเริ่มจำลองอัตโนมัติ</p>
+</section>
+
+</aside>
 </main>
-<script>
-const NS='http://www.w3.org/2000/svg';
-function mk(tag,a,par){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(par)par.appendChild(e);return e;}
-const clamp=(v,a,c)=>Math.max(a,Math.min(c,v));
-const svg=document.getElementById('sc');
-const $=id=>document.getElementById(id);
-const FZ=80,CX=190;
-const home=[{x:50,y:398},{x:130,y:398},{x:210,y:398}];
-const P=home.map(p=>({x:p.x,y:p.y}));
-let b=285,g=0.1,ri=0,wet=0,drag=-1,token=0,last='',time=0;
-const trees=$('trees');
-[[48,368],[84,372],[128,372],[168,366],[232,364],[274,366],[346,370]].forEach(p=>{
-const t=mk('g',{transform:'translate('+p[0]+','+p[1]+')'},trees);
-mk('rect',{x:-1,y:-9,width:2,height:9,fill:'#854F0B'},t);
-mk('ellipse',{cx:0,cy:-14,rx:7,ry:9,fill:'#3B6D11'},t);
-mk('ellipse',{cx:-2,cy:-16,rx:3.5,ry:4.5,fill:'#639922'},t);
-});
-const crops=$('crops');
-const stalks=[];
-for(let x=24;x<300;x+=16){
-mk('line',{x1:x,y1:392,x2:x,y2:388,stroke:'#7A5C2E','stroke-width':1.2},crops);
-stalks.push({gl:mk('line',{x1:x,y1:392,x2:x,y2:389,stroke:'#3B6D11','stroke-width':1.6,opacity:0},crops)});
-}
-const cl=$('cl');
-const CP=[[0,0,90,24],[-45,-14,40,22],[48,-12,42,22],[-30,-48,60,30],[34,-58,56,32],[0,-108,52,34],[-26,-95,38,28],[-4,-160,44,30],[18,-175,32,24],[8,-200,28,20]];
-const cg=mk('g',{},cl);
-CP.forEach(p=>mk('ellipse',{cx:p[0],cy:p[1],rx:p[2]+7,ry:p[3]+7,fill:'#FFFFFF','fill-opacity':0.3},cg));
-CP.forEach(p=>mk('ellipse',{cx:p[0]+5,cy:p[1]+9,rx:p[2],ry:p[3],fill:'#D3D1C7'},cg));
-CP.forEach(p=>mk('ellipse',{cx:p[0],cy:p[1],rx:p[2],ry:p[3],fill:'#FFFFFF'},cg));
-const under=mk('ellipse',{cx:0,cy:8,rx:80,ry:12,fill:'#5F5E5A','fill-opacity':0.2},cg);
-const under2=mk('ellipse',{cx:0,cy:-36,rx:64,ry:16,fill:'#888780','fill-opacity':0},cg);
-const iceG=$('ice'),ice=[];
-[[-14,-200],[10,-186],[-24,-168],[24,-172],[0,-150],[-34,-140],[30,-128],[-8,-176]].forEach(p=>{
-ice.push({el:mk('path',{d:'M-4 0H4M0 -4V4M-3 -3L3 3M-3 3L3 -3',fill:'none',stroke:'#378ADD','stroke-width':1.2,opacity:0},iceG),ox:p[0],oy:p[1]});
-});
-const vapG=$('vap'),vap=[];
-for(let i=0;i<18;i++)vap.push({el:mk('circle',{r:1.7,fill:'#FFFFFF',opacity:0},vapG),on:false,x:0,y:0,vy:0,ph:0});
-const rnG=$('rn'),rn=[];
-for(let i=0;i<54;i++)rn.push({el:mk('line',{stroke:'#378ADD','stroke-width':1.2,opacity:0.7,visibility:'hidden'},rnG),on:false,x:0,y:0,vy:0,vx:0});
-const rpG=$('rp'),rp=[];
-for(let i=0;i<14;i++)rp.push({el:mk('ellipse',{fill:'none',stroke:'#378ADD','stroke-width':0.8,visibility:'hidden'},rpG),on:false,x:0,t:0});
-const trG=$('tr'),trc=['#888780','#BA7517','#85B7EB'],tr=[];
-for(let i=0;i<3;i++)for(let j=0;j<14;j++)tr.push({el:mk('circle',{r:1.7,fill:trc[i],stroke:'#5F5E5A','stroke-width':0.3,visibility:'hidden'},trG),on:false,x:0,y:0,vx:0,vy:0,age:0,pl:i});
-const emit=[0,0,0];
-const names=['เครื่องบินลำที่ 1 ก่อกวน','เครื่องบินลำที่ 2 เลี้ยงให้อ้วน','เครื่องบินลำที่ 3 โจมตี'];
-const pEls=[],blades=[];
-for(let i=0;i<3;i++){
-const e=mk('g',{class:'pl',id:'p'+i,tabindex:0,role:'button','aria-label':names[i],transform:'translate('+P[i].x+','+P[i].y+')'},$('pls'));
-e.innerHTML='<circle r="24" fill="#000" fill-opacity="0.001"/><polygon points="-15,-1 -22,-11 -14,-11 -8,-1" fill="#185FA5"/><ellipse rx="17" ry="5" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/><path d="M-14 1.5H15" stroke="#185FA5" stroke-width="1" fill="none"/><polygon points="-3,0 5,0 -1,-11 -7,-11" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5"/><ellipse cx="8" cy="-1.5" rx="3.5" ry="2" fill="#378ADD"/><ellipse cx="18" cy="0" rx="1.2" ry="7" fill="#444441" fill-opacity="0.3"/><line class="bl" x1="18" y1="-7" x2="18" y2="7" stroke="#2C2C2A" stroke-width="1.2"/><circle cx="0" cy="-24" r="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/><text x="0" y="-24" text-anchor="middle" dominant-baseline="central" style="fill:#3C3489;font-size:13px;font-weight:500">'+(i+1)+'</text>';
-pEls.push(e);blades.push(e.querySelector('.bl'));
-}
-function ok(i){
-const p=P[i];
-if(i===0)return p.y>b+34&&p.y<372;
-if(i===1)return p.y>=b-14&&p.y<=b+30;
-return p.y>b-250&&p.y<b-150&&p.y>26;
-}
-function freeP(pool){for(let k=0;k<pool.length;k++)if(!pool[k].on)return pool[k];return null;}
-let tPrev=performance.now();
-function frame(t){
-const dt=Math.min(0.05,(t-tPrev)/1000);tPrev=t;time=t/1000;
-const s=[ok(0),ok(1),ok(2)];
-const tg=!s[0]?0.1:(!s[1]?0.4:1);
-g+=(tg-g)*Math.min(1,dt*3);
-const cold=(b-220)<FZ;
-const raining=g>0.95&&s[2];
-ri+=((raining?1:0)-ri)*Math.min(1,dt*1.5);
-wet=clamp(wet+dt*(ri*0.1-(1-ri)*0.004),0,1);
-const sx=0.55+0.45*g;
-cl.setAttribute('transform','translate('+(CX+Math.sin(time/3)*2).toFixed(2)+','+b+') scale('+sx.toFixed(3)+','+g.toFixed(3)+')');
-under.setAttribute('fill-opacity',(0.15+0.4*g).toFixed(2));
-under2.setAttribute('fill-opacity',(0.3*g*g).toFixed(2));
-$('dim').setAttribute('fill-opacity',(0.2*g*(0.6+0.4*ri)).toFixed(3));
-$('grn').setAttribute('fill-opacity',(wet*0.85).toFixed(3));
-stalks.forEach(o=>{o.gl.setAttribute('y2',(392-3-9*wet).toFixed(1));o.gl.setAttribute('opacity',Math.min(1,wet*1.5).toFixed(2));});
-const pd=$('pond');
-pd.setAttribute('rx',(22+16*wet).toFixed(1));pd.setAttribute('ry',(5+4*wet).toFixed(1));
-$('fzl').setAttribute('y1',FZ);$('fzl').setAttribute('y2',FZ);
-$('fzt').setAttribute('y',FZ-7);
-$('hz').setAttribute('opacity',s[0]?1:0);
-ice.forEach((o,i)=>{
-const show=cold&&g>0.9;
-o.el.setAttribute('opacity',show?((s[2]?1:0.45)*(0.6+0.4*Math.sin(time*4+i))).toFixed(2):0);
-o.el.setAttribute('transform','translate('+(CX+o.ox*sx).toFixed(1)+','+(b+o.oy*g).toFixed(1)+')');
-});
-if(s[0]){
-emit.v=(emit.v||0)+dt*5;
-while(emit.v>1){emit.v-=1;const v=freeP(vap);if(!v)break;v.on=true;v.x=30+Math.random()*320;v.y=376;v.vy=-(26+Math.random()*20);v.ph=Math.random()*6;}
-}
-vap.forEach(v=>{
-if(!v.on)return;
-v.y+=v.vy*dt;v.x+=Math.sin(time*2+v.ph)*8*dt;
-const top=b+14;
-if(v.y<top){v.on=false;v.el.setAttribute('opacity',0);return;}
-const a=v.y<top+30?clamp((v.y-top)/30,0,1)*0.7:0.7;
-v.el.setAttribute('cx',v.x.toFixed(1));v.el.setAttribute('cy',v.y.toFixed(1));v.el.setAttribute('opacity',a.toFixed(2));
-});
-rn.sp=(rn.sp||0)+dt*70*ri;
-while(rn.sp>1){rn.sp-=1;const d=freeP(rn);if(!d)break;d.on=true;d.x=CX+(Math.random()*2-1)*68*sx;d.y=b+14+Math.random()*6;d.vy=230+Math.random()*60;d.vx=-24;d.el.setAttribute('visibility','visible');}
-rn.forEach(d=>{
-if(!d.on)return;
-d.y+=d.vy*dt;d.x+=d.vx*dt;
-if(d.y>=384){
-d.on=false;d.el.setAttribute('visibility','hidden');
-if(Math.random()<0.5){const r=freeP(rp);if(r){r.on=true;r.x=d.x;r.t=0;r.el.setAttribute('visibility','visible');}}
-return;
-}
-d.el.setAttribute('x1',(d.x+2).toFixed(1));d.el.setAttribute('y1',(d.y-9).toFixed(1));d.el.setAttribute('x2',d.x.toFixed(1));d.el.setAttribute('y2',d.y.toFixed(1));
-});
-rp.forEach(r=>{
-if(!r.on)return;
-r.t+=dt/0.6;
-if(r.t>=1){r.on=false;r.el.setAttribute('visibility','hidden');return;}
-const rx=2+r.t*12;
-r.el.setAttribute('cx',r.x.toFixed(1));r.el.setAttribute('cy',386);r.el.setAttribute('rx',rx.toFixed(1));r.el.setAttribute('ry',(rx*0.28).toFixed(1));r.el.setAttribute('opacity',(1-r.t).toFixed(2));
-});
-for(let i=0;i<3;i++){
-if(P[i].y<372){
-emit[i]+=dt*9;
-while(emit[i]>1){emit[i]-=1;const q=freeP(tr.filter(z=>z.pl===i));if(!q)break;q.on=true;q.x=P[i].x-18;q.y=P[i].y+5+Math.random()*3;q.vx=-10-Math.random()*8;q.vy=5+Math.random()*9;q.age=0;q.el.setAttribute('visibility','visible');}
-}
-}
-tr.forEach(q=>{
-if(!q.on)return;
-q.age+=dt;
-if(q.age>2.6){q.on=false;q.el.setAttribute('visibility','hidden');return;}
-q.x+=q.vx*dt;q.y+=q.vy*dt;
-q.el.setAttribute('cx',q.x.toFixed(1));q.el.setAttribute('cy',q.y.toFixed(1));q.el.setAttribute('opacity',(1-q.age/2.6).toFixed(2));
-});
-for(let i=0;i<3;i++){
-pEls[i].setAttribute('transform','translate('+P[i].x.toFixed(1)+','+P[i].y.toFixed(1)+')');
-const sc=P[i].y<372?Math.cos(time*40):0.6;
-blades[i].setAttribute('transform','translate(18,0) scale(1,'+sc.toFixed(2)+') translate(-18,0)');
-}
-const key=s.join('')+(raining?'r':'')+(g>0.95?'g':'')+(cold?'c':'w')+(wet>0.6?'w':'');
-if(key!==last){
-last=key;
-['i0','i1','i2'].forEach((id,i)=>{const ic=$(id);ic.textContent=s[i]?'✓':'○';ic.style.color=s[i]?'var(--ok)':'var(--muted)';});
-$('s3').textContent=cold?'3 โจมตี: วางที่ยอดเมฆ (เมฆเย็น โปรยน้ำแข็งแห้ง)':'3 โจมตี: วางที่ยอดเมฆ (เมฆอุ่น โปรยผงเกลือละเอียด)';
-$('msg').textContent=raining?'ฝนตกแล้ว ทุ่งเริ่มชุ่มชื้นและน้ำในบ่อเพิ่มขึ้น':(g>0.95?'เมฆโตเต็มที่แล้ว ลากลำที่ 3 ไปที่ยอดเมฆ':(s[0]?'เมฆเริ่มก่อตัว ลากลำที่ 2 ไปที่ฐานเมฆ':'ลากเครื่องบินจากพื้นขึ้นไปวางได้เลย'));
-}
-requestAnimationFrame(frame);
-}
-function toSvg(e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());}
-pEls.forEach((el,i)=>{
-el.addEventListener('pointerdown',e=>{drag=i;token++;el.setPointerCapture(e.pointerId);e.preventDefault();});
-el.addEventListener('pointermove',e=>{if(drag!==i)return;const q=toSvg(e);P[i].x=clamp(q.x,24,356);P[i].y=clamp(q.y,28,404);});
-el.addEventListener('pointerup',()=>{drag=-1;});
-el.addEventListener('pointercancel',()=>{drag=-1;});
-el.addEventListener('keydown',e=>{
-const d={ArrowUp:[0,-6],ArrowDown:[0,6],ArrowLeft:[-6,0],ArrowRight:[6,0]}[e.key];
-if(!d)return;
-e.preventDefault();token++;
-P[i].x=clamp(P[i].x+d[0],24,356);P[i].y=clamp(P[i].y+d[1],28,404);
-});
-});
-$('bh').addEventListener('input',e=>{b=320-Number(e.target.value);});
-function moveTo(i,x,y,ms,tk){
-return new Promise(res=>{
-const sx0=P[i].x,sy0=P[i].y,t0=performance.now();
-(function f(t){
-if(tk!==token){res();return;}
-const k=Math.min(1,(t-t0)/ms);
-const e=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
-P[i].x=sx0+(x-sx0)*e;P[i].y=sy0+(y-sy0)*e;
-if(k<1)requestAnimationFrame(f);else res();
-})(t0);
-});
-}
-const wait=ms=>new Promise(r=>setTimeout(r,ms));
-function resetAll(){token++;const tk=token;wet=0;return Promise.all(home.map((h,i)=>moveTo(i,h.x,h.y,700,tk)));}
-$('reset').addEventListener('click',resetAll);
-$('auto').addEventListener('click',async()=>{
-await resetAll();
-token++;
-const tk=token;
-await wait(300);
-if(tk!==token)return;
-await moveTo(0,250,b+44,1300,tk);
-await wait(2000);
-if(tk!==token)return;
-await moveTo(1,150,b+10,1300,tk);
-await wait(2400);
-if(tk!==token)return;
-await moveTo(2,225,b-195,1600,tk);
-});
-requestAnimationFrame(frame);
-</script>
+
+<footer>สื่อจำลองเพื่อการเรียนรู้เรื่องฝนหลวง • ค่าบรรยากาศและผลลัพธ์เป็นข้อมูลสมมติ</footer>
+
+<script src="game.js"></script>
 </body>
 </html>
