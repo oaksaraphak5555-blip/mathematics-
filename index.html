@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th" data-theme="light">
 <head>
@@ -525,6 +524,10 @@ footer {
       <text x="15" y="168" fill="#145c91" font-size="15" font-weight="bold">ระดับ 0°C (จำลอง)</text>
 
       <g id="rainLayer"></g>
+
+      <!-- ชั้นแสดงละอองจำลอง -->
+      <g id="particleLayer" pointer-events="none"></g>
+
       <g id="aircraftLayer"></g>
 
       <rect x="15" y="510" width="210" height="32" rx="9" class="scene-label-bg"/>
@@ -538,6 +541,7 @@ footer {
     <span>┄ ระดับ 0°C</span>
     <span>💧 ฝน</span>
     <span>✈ เครื่องบิน</span>
+    <span>✧ ละอองจำลอง</span>
   </div>
 
   <div class="metrics">
@@ -688,6 +692,11 @@ const state = {
   autoId:0,
   dragging:null,
   drops:[],
+
+  // ระบบอนุภาคจำลอง
+  particles:[],
+  emitTimer:0,
+
   planes:[
     {x:180,y:360},
     {x:350,y:360},
@@ -816,6 +825,10 @@ function checkPlane(i) {
 function setStage(n) {
   state.stage=clamp(n,0,3);
   state.growth=Math.max(state.growth,[0,.3,.68,1][state.stage]);
+
+  // เริ่มนับการปล่อยละอองใหม่
+  state.emitTimer=0;
+
   updateUI();
 
   if(state.stage===3) {
@@ -926,6 +939,125 @@ function addRain() {
   }
 }
 
+// =======================================
+// ระบบละอองจำลองจากเครื่องบิน
+// =======================================
+
+function emitParticles() {
+
+  // ปล่อยละอองเฉพาะเมื่อเลือกขั้นตอน 1-3
+  if(state.stage<1 || state.stage>3) return;
+
+  const plane=state.planes[state.stage-1];
+
+  if(!plane) return;
+
+  for(let i=0;i<4;i++) {
+
+    // จุดปล่อยละอองบริเวณท้ายเครื่องบิน
+    const x=plane.x-25+(Math.random()*5-2.5);
+    const y=plane.y+3+(Math.random()*5-2.5);
+
+    const size=1.5+Math.random()*2.5;
+
+    const colors=[
+      "#ffffff",
+      "#d9f2ff",
+      "#c5e6f5"
+    ];
+
+    const color=colors[
+      Math.floor(Math.random()*colors.length)
+    ];
+
+    const el=svg("circle",{
+      cx:x,
+      cy:y,
+      r:size,
+      fill:color,
+      opacity:.9
+    },$("particleLayer"));
+
+    state.particles.push({
+      el,
+      x,
+      y,
+
+      // ความเร็วเริ่มต้น
+      vx:-15-Math.random()*25,
+      vy:15+Math.random()*25,
+
+      // แรงโน้มถ่วงจำลอง
+      gravity:8+Math.random()*12,
+
+      // อายุอนุภาค
+      life:0,
+      maxLife:1.5+Math.random()*1.5,
+
+      size
+    });
+  }
+
+  // จำกัดจำนวนอนุภาคเพื่อรักษาประสิทธิภาพ
+  while(state.particles.length>500) {
+    const old=state.particles.shift();
+    old.el.remove();
+  }
+}
+
+// อัปเดตการเคลื่อนที่ของละออง
+function updateParticles(dt) {
+
+  const wind=state.wind;
+
+  state.particles.forEach(p=>{
+
+    p.life+=dt;
+
+    // แรงลมพัดอนุภาค
+    p.vx+=wind*.12*dt;
+
+    // แรงโน้มถ่วง
+    p.vy+=p.gravity*dt;
+
+    // อัปเดตตำแหน่ง
+    p.x+=p.vx*dt;
+    p.y+=p.vy*dt;
+
+    // ค่อย ๆ จางหาย
+    const fade=Math.max(
+      0,
+      1-p.life/p.maxLife
+    );
+
+    p.el.setAttribute("cx",p.x);
+    p.el.setAttribute("cy",p.y);
+    p.el.setAttribute("opacity",fade);
+
+    // ขยายตัวเล็กน้อย
+    p.el.setAttribute(
+      "r",
+      p.size*(0.8+p.life*.25)
+    );
+  });
+
+  // ลบอนุภาคที่หมดอายุหรือออกนอกพื้นที่
+  state.particles=state.particles.filter(p=>{
+
+    const alive=
+      p.life<p.maxLife &&
+      p.x>-30 &&
+      p.x<930 &&
+      p.y<580;
+
+    if(!alive) {
+      p.el.remove();
+    }
+
+    return alive;
+  });
+}
+
 // วงจรภาพเคลื่อนไหว
 let previous=performance.now();
 let rainTimer=0;
@@ -937,6 +1069,23 @@ function frame(now) {
   previous=now;
 
   if(state.paused)return;
+
+  // =================================
+  // ระบบสร้างละอองระหว่างจำลอง
+  // =================================
+
+  if(state.stage>0 && state.stage<4) {
+
+    state.emitTimer+=dt;
+
+    if(state.emitTimer>=.045) {
+      state.emitTimer=0;
+      emitParticles();
+    }
+  }
+
+  // อัปเดตละอองทุกเฟรม
+  updateParticles(dt);
 
   const growthTargets=[0,.3,.68,1];
 
@@ -1073,13 +1222,21 @@ $("resetBtn").addEventListener("click",()=>{
   state.stage=0;
   state.growth=0;
   state.rain=0;
+
   state.drops.forEach(d=>d.el.remove());
   state.drops=[];
+
+  // ล้างละอองทั้งหมด
+  state.particles.forEach(p=>p.el.remove());
+  state.particles=[];
+
+  state.emitTimer=0;
 
   $("green").setAttribute("opacity",0);
   $("pond").setAttribute("opacity",1);
 
   $("rainLayer").innerHTML="";
+  $("particleLayer").innerHTML="";
 
   state.planes=[
     {x:180,y:360},
@@ -1144,1150 +1301,4 @@ requestAnimationFrame(frame);
 
 </script>
 </body>
-</html>
-<!DOCTYPE html>
-<html lang="th" data-theme="light">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#dceeff">
-<title>ห้องปฏิบัติการจำลองฝนหลวง</title>
-
-<style>
-:root {
-  --bg:#edf3f9;
-  --panel:#fff;
-  --text:#172b40;
-  --muted:#718195;
-  --line:#dce5ed;
-  --soft:#f2f7fb;
-  --accent:#1877b9;
-  --accent2:#d9edff;
-  --green:#27834b;
-}
-
-[data-theme="dark"] {
-  color-scheme:dark;
-  --bg:#101722;
-  --panel:#1b2736;
-  --text:#eef5fc;
-  --muted:#a6b5c7;
-  --line:#344456;
-  --soft:#263447;
-  --accent:#62b7fa;
-  --accent2:#263f58;
-  --green:#75d69b;
-}
-
-* {
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
-
-html,body {
-  margin:0;
-  width:100%;
-  min-height:100%;
-  background:var(--bg);
-  color:var(--text);
-  font-family:system-ui,"Noto Sans Thai",sans-serif;
-}
-
-body {
-  min-height:100dvh;
-  overflow-x:hidden;
-}
-
-button,input {
-  font:inherit;
-}
-
-button {
-  cursor:pointer;
-  touch-action:manipulation;
-}
-
-.topbar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  padding:12px 20px;
-  background:var(--panel);
-  border-bottom:1px solid var(--line);
-}
-
-.brand {
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.logo {
-  width:43px;
-  height:43px;
-  border-radius:13px;
-  display:grid;
-  place-items:center;
-  background:var(--accent2);
-  font-size:25px;
-}
-
-h1 {
-  font-size:clamp(16px,2vw,23px);
-  margin:0;
-}
-
-h2 {
-  font-size:17px;
-  margin:0 0 12px;
-}
-
-h3 {
-  font-size:14px;
-  margin:0 0 5px;
-}
-
-.sub {
-  font-size:10px;
-  color:var(--muted);
-  letter-spacing:1px;
-}
-
-.toolbar {
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-}
-
-.btn {
-  border:1px solid var(--line);
-  background:var(--soft);
-  color:var(--text);
-  padding:10px 14px;
-  border-radius:10px;
-  font-size:13px;
-  min-height:42px;
-}
-
-.btn:active {
-  transform:scale(.97);
-}
-
-.btn:disabled {
-  opacity:.5;
-  cursor:not-allowed;
-}
-
-.primary {
-  background:var(--accent);
-  color:white;
-  border-color:var(--accent);
-}
-
-.layout {
-  width:100%;
-  max-width:1750px;
-  margin:auto;
-  padding:15px;
-  display:grid;
-  grid-template-columns:minmax(0,1.5fr) minmax(320px,.8fr);
-  gap:15px;
-  align-items:start;
-}
-
-.panel {
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:15px;
-  padding:15px;
-  min-width:0;
-}
-
-.scene-header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:8px;
-  margin-bottom:12px;
-}
-
-.live {
-  color:var(--green);
-  font-size:11px;
-}
-
-.scene-wrap {
-  width:100%;
-  overflow:hidden;
-  border-radius:12px;
-  background:#b8dcf5;
-}
-
-#scene {
-  display:block;
-  width:100%;
-  height:auto;
-  touch-action:pan-y;
-}
-
-#aircraftLayer {
-  pointer-events:none;
-}
-
-.aircraft {
-  pointer-events:auto;
-  touch-action:none;
-  cursor:grab;
-}
-
-.aircraft:active {
-  cursor:grabbing;
-}
-
-.scene-label {
-  fill:#173c58;
-  font-size:15px;
-  font-weight:bold;
-}
-
-.scene-label-bg {
-  fill:white;
-  fill-opacity:.8;
-}
-
-.legend {
-  display:flex;
-  gap:14px;
-  flex-wrap:wrap;
-  padding:10px 4px;
-  font-size:11px;
-  color:var(--muted);
-}
-
-.metrics {
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-}
-
-.metric {
-  background:var(--soft);
-  border-radius:10px;
-  padding:10px;
-}
-
-.metric span {
-  display:block;
-  color:var(--muted);
-  font-size:10px;
-}
-
-.metric strong {
-  font-size:13px;
-  overflow-wrap:anywhere;
-}
-
-.side {
-  display:grid;
-  gap:12px;
-}
-
-.stage {
-  display:grid;
-  grid-template-columns:30px 1fr;
-  gap:9px;
-  padding:11px;
-  border:1px solid var(--line);
-  border-radius:11px;
-  margin-bottom:8px;
-  background:var(--soft);
-}
-
-.stage.active {
-  border-color:var(--accent);
-  background:var(--accent2);
-}
-
-.number {
-  width:28px;
-  height:28px;
-  display:grid;
-  place-items:center;
-  border-radius:9px;
-  color:white;
-  background:var(--accent);
-  font-weight:bold;
-}
-
-.stage p {
-  font-size:11px;
-  color:var(--muted);
-  margin:3px 0;
-}
-
-.stage small {
-  font-size:10px;
-  color:var(--muted);
-}
-
-.stage button {
-  margin-top:7px;
-  min-height:38px;
-  font-size:11px;
-  padding:7px 12px;
-}
-
-.info {
-  background:var(--accent2);
-  padding:12px;
-  border-radius:11px;
-  margin-top:10px;
-}
-
-.info p {
-  font-size:11px;
-  margin:5px 0;
-}
-
-.range {
-  margin:13px 0;
-}
-
-.range label {
-  display:flex;
-  justify-content:space-between;
-  font-size:12px;
-  gap:8px;
-}
-
-.range output {
-  color:var(--accent);
-  font-weight:bold;
-}
-
-input[type=range] {
-  width:100%;
-  min-height:35px;
-  accent-color:var(--accent);
-  touch-action:pan-y;
-}
-
-.weather {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-}
-
-.weather div {
-  background:var(--soft);
-  padding:10px;
-  border-radius:9px;
-}
-
-.weather span {
-  display:block;
-  color:var(--muted);
-  font-size:10px;
-}
-
-.weather strong {
-  font-size:12px;
-}
-
-.actions {
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-}
-
-.actions button {
-  flex:1;
-  min-width:90px;
-}
-
-.status {
-  font-size:11px;
-  color:var(--green);
-}
-
-.note {
-  font-size:10px;
-  color:var(--muted);
-  margin:10px 0 0;
-}
-
-footer {
-  text-align:center;
-  color:var(--muted);
-  font-size:11px;
-  padding:15px;
-}
-
-/* Tablet landscape */
-@media (min-width:700px) and (orientation:landscape) {
-  .layout {
-    grid-template-columns:minmax(0,1.5fr) minmax(330px,.8fr);
-  }
-
-  .scene-panel {
-    position:sticky;
-    top:10px;
-  }
-
-  .panel {
-    padding:16px;
-  }
-}
-
-/* Tablet portrait */
-@media (min-width:700px) and (orientation:portrait) {
-  .layout {
-    grid-template-columns:1fr;
-  }
-
-  .side {
-    grid-template-columns:1fr 1fr;
-  }
-}
-
-/* Mobile */
-@media(max-width:699px) {
-  .topbar {
-    padding:10px;
-  }
-
-  .layout {
-    grid-template-columns:1fr;
-    padding:9px;
-    gap:10px;
-  }
-
-  .panel {
-    padding:11px;
-  }
-
-  .metrics {
-    grid-template-columns:1fr 1fr;
-  }
-
-  .side {
-    grid-template-columns:1fr;
-  }
-
-  .toolbar {
-    flex-direction:column;
-  }
-
-  .toolbar .btn {
-    font-size:10px;
-    padding:7px;
-  }
-}
-
-@media(prefers-reduced-motion:reduce) {
-  *,*::before,*::after {
-    animation:none!important;
-    transition:none!important;
-  }
-}
-</style>
-</head>
-
-<body>
-
-<header class="topbar">
-  <div class="brand">
-    <div class="logo">☁️</div>
-    <div>
-      <div class="sub">LEARNING SIMULATOR</div>
-      <h1>ห้องปฏิบัติการจำลองฝนหลวง</h1>
-    </div>
-  </div>
-
-  <div class="toolbar">
-    <button class="btn" id="themeBtn">🌙 โหมดมืด</button>
-    <button class="btn" id="fullBtn">⛶ เต็มจอ</button>
-  </div>
-</header>
-
-<main class="layout">
-
-<section class="panel scene-panel">
-
-  <div class="scene-header">
-    <div>
-      <div class="sub">LIVE SIMULATION</div>
-      <h2>ภาพจำลองสภาพอากาศ</h2>
-    </div>
-    <span class="live">● ระบบจำลอง</span>
-  </div>
-
-  <div class="scene-wrap">
-    <svg id="scene" viewBox="0 0 900 560">
-
-      <defs>
-        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#73b8ee"/>
-          <stop offset="100%" stop-color="#e4f3ff"/>
-        </linearGradient>
-
-        <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#a99a65"/>
-          <stop offset="100%" stop-color="#735337"/>
-        </linearGradient>
-      </defs>
-
-      <rect width="900" height="560" fill="url(#sky)"/>
-
-      <circle cx="780" cy="85" r="36" fill="#ffdf89"/>
-
-      <g fill="white" opacity=".65">
-        <ellipse cx="130" cy="95" rx="70" ry="17"/>
-        <ellipse cx="160" cy="82" rx="40" ry="24"/>
-        <ellipse cx="650" cy="120" rx="65" ry="15"/>
-      </g>
-
-      <path d="M0 410 L130 330 L240 390 L370 300 L490 390 L620 320 L770 390 L900 335 L900 560 L0 560Z" fill="#a6b8c4"/>
-
-      <path d="M0 430 Q200 390 400 425 T900 420 L900 560 L0 560Z" fill="#62894e"/>
-
-      <path d="M0 475 Q200 435 400 470 T900 465 L900 560 L0 560Z" fill="url(#land)"/>
-
-      <path id="green" d="M0 475 Q200 435 400 470 T900 465 L900 560 L0 560Z" fill="#55a84a" opacity="0"/>
-
-      <path id="pond" d="M700 500 Q760 465 850 495 Q800 530 700 510Z" fill="#4ba9e8"/>
-
-      <g id="cloud" transform="translate(450 280) scale(.5)">
-        <ellipse cx="0" cy="0" rx="175" ry="55" fill="#d6dce3"/>
-        <ellipse cx="-90" cy="-20" rx="75" ry="75" fill="#f6f8fa"/>
-        <ellipse cx="0" cy="-65" rx="90" ry="100" fill="#fff"/>
-        <ellipse cx="95" cy="-25" rx="90" ry="75" fill="#f8f9fb"/>
-        <ellipse cx="20" cy="-125" rx="60" ry="75" fill="#fff"/>
-      </g>
-
-      <line id="zeroLine" x1="0" x2="900" y1="180" y2="180" stroke="#1688cb" stroke-width="2" stroke-dasharray="10 8"/>
-
-      <text x="15" y="168" fill="#145c91" font-size="15" font-weight="bold">ระดับ 0°C (จำลอง)</text>
-
-      <g id="rainLayer"></g>
-      <g id="aircraftLayer"></g>
-
-      <rect x="15" y="510" width="210" height="32" rx="9" class="scene-label-bg"/>
-      <text x="27" y="531" class="scene-label">พื้นที่เกษตรจำลอง</text>
-
-    </svg>
-  </div>
-
-  <div class="legend">
-    <span>☁️ เมฆ</span>
-    <span>┄ ระดับ 0°C</span>
-    <span>💧 ฝน</span>
-    <span>✈ เครื่องบิน</span>
-  </div>
-
-  <div class="metrics">
-    <div class="metric">
-      <span>สถานะเมฆ</span>
-      <strong id="cloudStatus">ยังไม่ก่อตัว</strong>
-    </div>
-    <div class="metric">
-      <span>ฐานเมฆ</span>
-      <strong id="baseRead">5,000 ฟุต</strong>
-    </div>
-    <div class="metric">
-      <span>ยอดเมฆ</span>
-      <strong id="topRead">5,000 ฟุต</strong>
-    </div>
-    <div class="metric">
-      <span>ฝนจำลอง</span>
-      <strong id="rainRead">0 มม.</strong>
-    </div>
-  </div>
-
-</section>
-
-<aside class="side">
-
-<section class="panel">
-  <div class="sub">MISSION CONTROL</div>
-  <h2>ขั้นตอนการจำลอง</h2>
-
-  <article class="stage" id="card1">
-    <div class="number">1</div>
-    <div>
-      <h3>ก่อกวน</h3>
-      <p>ศึกษาการสร้างแกนควบแน่นในเมฆ</p>
-      <small>ตัวอย่างสาร: โซเดียมคลอไรด์ (NaCl)</small>
-      <br>
-      <button class="btn" data-stage="1">เลือกขั้นตอนที่ 1</button>
-    </div>
-  </article>
-
-  <article class="stage" id="card2">
-    <div class="number">2</div>
-    <div>
-      <h3>เลี้ยงให้อ้วน</h3>
-      <p>ศึกษาการเติบโตและพัฒนาตัวของเมฆ</p>
-      <small>ตัวอย่างสารในบทเรียน: สารดูดความชื้น เช่น CaCl₂</small>
-      <br>
-      <button class="btn" data-stage="2">เลือกขั้นตอนที่ 2</button>
-    </div>
-  </article>
-
-  <article class="stage" id="card3">
-    <div class="number">3</div>
-    <div>
-      <h3>โจมตี</h3>
-      <p>ศึกษาการรวมตัวของหยดน้ำหรือผลึกน้ำแข็ง</p>
-      <small>ตัวอย่างแนวคิด: กระบวนการเมฆอุ่นและเมฆเย็น</small>
-      <br>
-      <button class="btn" data-stage="3">เลือกขั้นตอนที่ 3</button>
-    </div>
-  </article>
-
-  <div class="info">
-    <strong>🔬 ข้อมูลทางวิทยาศาสตร์</strong>
-    <p id="scienceTitle">รอเริ่มการจำลอง</p>
-    <p id="scienceMaterial">สารตัวอย่าง: —</p>
-    <p id="scienceRole">หลักการ: —</p>
-    <p id="scienceCloud">สภาพเมฆ: —</p>
-    <p class="note">สารที่กล่าวถึงเป็นตัวอย่างทางการศึกษา ไม่ใช่สูตรหรือคำแนะนำในการนำไปใช้จริง</p>
-  </div>
-</section>
-
-<section class="panel">
-  <div class="sub">ATMOSPHERE CONTROL</div>
-  <h2>ปรับสภาพบรรยากาศ</h2>
-
-  <div class="range">
-    <label>ความสูงฐานเมฆ <output id="baseValue">5,000 ฟุต</output></label>
-    <input id="baseInput" type="range" min="3000" max="12000" step="250" value="5000">
-  </div>
-
-  <div class="range">
-    <label>ความชื้นสัมพัทธ์ <output id="humidityValue">65%</output></label>
-    <input id="humidityInput" type="range" min="20" max="100" value="65">
-  </div>
-
-  <div class="range">
-    <label>ความเร็วลม <output id="windValue">12 กม./ชม.</output></label>
-    <input id="windInput" type="range" min="0" max="40" value="12">
-  </div>
-
-  <div class="weather">
-    <div>
-      <span>อุณหภูมิจำลอง</span>
-      <strong id="temperature">25°C</strong>
-    </div>
-    <div>
-      <span>สภาพเมฆ</span>
-      <strong id="cloudType">เมฆเริ่มก่อตัว</strong>
-    </div>
-    <div>
-      <span>ระดับอ้างอิง</span>
-      <strong>18,000 ฟุต</strong>
-    </div>
-    <div>
-      <span>ทิศทางลม</span>
-      <strong>ตะวันออกเฉียงใต้</strong>
-    </div>
-  </div>
-
-  <p class="note">ตัวเลขทั้งหมดเป็นค่าจำลอง ไม่ใช่การวัดอากาศจริง</p>
-</section>
-
-<section class="panel">
-  <h2>ควบคุมการจำลอง</h2>
-
-  <div class="actions">
-    <button class="btn primary" id="autoBtn">▶ เริ่มอัตโนมัติ</button>
-    <button class="btn" id="pauseBtn">Ⅱ หยุด</button>
-    <button class="btn" id="resetBtn">↻ รีเซ็ต</button>
-  </div>
-
-  <p class="note" id="message">ลากเครื่องบินด้วยนิ้วหรือเมาส์ไปยังตำแหน่งเป้าหมาย หรือเลือกขั้นตอนจากปุ่ม</p>
-</section>
-
-</aside>
-</main>
-
-<footer>
-  สื่อการเรียนรู้จำลองกระบวนการฝนหลวง • ไม่ใช่ระบบปฏิบัติการจริง
-</footer>
-
-<script>
-"use strict";
-
-const $ = id => document.getElementById(id);
-const NS = "http://www.w3.org/2000/svg";
-
-const state = {
-  stage:0,
-  growth:0,
-  rain:0,
-  base:5000,
-  humidity:65,
-  wind:12,
-  paused:false,
-  auto:false,
-  autoId:0,
-  dragging:null,
-  drops:[],
-  planes:[
-    {x:180,y:360},
-    {x:350,y:360},
-    {x:520,y:360}
-  ]
-};
-
-const targets=[
-  {x:450,y:350,r:110},
-  {x:450,y:260,r:120},
-  {x:450,y:145,r:130}
-];
-
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-
-function svg(tag,attrs,parent) {
-  const el=document.createElementNS(NS,tag);
-  Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
-  parent.appendChild(el);
-  return el;
-}
-
-// สร้างเครื่องบิน
-function drawPlanes() {
-  $("aircraftLayer").innerHTML="";
-
-  state.planes.forEach((p,i)=>{
-    const g=svg("g",{
-      class:"aircraft",
-      "data-index":i,
-      transform:`translate(${p.x} ${p.y})`
-    },$("aircraftLayer"));
-
-    svg("circle",{
-      cx:0,cy:0,r:35,fill:"transparent"
-    },g);
-
-    svg("path",{
-      d:"M-27 0 L-8 -5 L3 -22 L10 -22 L8 -5 L27 0 L8 5 L10 17 L4 17 L-7 5 Z",
-      fill:["#f0a52e","#2386c7","#8967c8"][i],
-      stroke:"#16405f",
-      "stroke-width":2
-    },g);
-
-    svg("circle",{
-      cx:0,cy:-30,r:11,
-      fill:"white",stroke:"#17415f"
-    },g);
-
-    const txt=svg("text",{
-      x:0,y:-26,
-      "text-anchor":"middle",
-      fill:"#17344b",
-      "font-size":13,
-      "font-weight":700
-    },g);
-
-    txt.textContent=i+1;
-  });
-}
-
-// รองรับนิ้วและเมาส์
-const scene=$("scene");
-
-scene.addEventListener("pointerdown",e=>{
-  const plane=e.target.closest(".aircraft");
-  if(!plane)return;
-
-  state.dragging=Number(plane.dataset.index);
-
-  try {
-    scene.setPointerCapture(e.pointerId);
-  } catch(err) {}
-
-  e.preventDefault();
-});
-
-scene.addEventListener("pointermove",e=>{
-  if(state.dragging===null)return;
-
-  const pt=scene.createSVGPoint();
-  pt.x=e.clientX;
-  pt.y=e.clientY;
-
-  const pos=pt.matrixTransform(scene.getScreenCTM().inverse());
-
-  const i=state.dragging;
-  const p=state.planes[i];
-
-  p.x=clamp(pos.x,35,865);
-  p.y=clamp(pos.y,70,445);
-
-  const el=$("aircraftLayer").querySelector(
-    `[data-index="${i}"]`
-  );
-
-  if(el) {
-    el.setAttribute("transform",`translate(${p.x} ${p.y})`);
-  }
-
-  checkPlane(i);
-  e.preventDefault();
-});
-
-function stopDrag() {
-  state.dragging=null;
-}
-
-scene.addEventListener("pointerup",stopDrag);
-scene.addEventListener("pointercancel",stopDrag);
-scene.addEventListener("lostpointercapture",stopDrag);
-
-// ตรวจสอบตำแหน่ง
-function checkPlane(i) {
-  if(i!==state.stage)return;
-
-  const p=state.planes[i];
-  const t=targets[i];
-
-  if(Math.hypot(p.x-t.x,p.y-t.y)<t.r) {
-    setStage(i+1);
-  }
-}
-
-// เปลี่ยนขั้นตอน
-function setStage(n) {
-  state.stage=clamp(n,0,3);
-  state.growth=Math.max(state.growth,[0,.3,.68,1][state.stage]);
-  updateUI();
-
-  if(state.stage===3) {
-    $("message").textContent="ครบทั้ง 3 ขั้นตอนแล้ว กำลังประเมินเงื่อนไขการเกิดฝน";
-  }
-}
-
-// ข้อมูล
-const data=[
-  {
-    title:"ยังไม่ได้เริ่ม",
-    material:"สารตัวอย่าง: —",
-    role:"หลักการ: เลือกขั้นตอนเพื่อศึกษา",
-    cloud:"สภาพเมฆ: ยังไม่ก่อตัว"
-  },
-  {
-    title:"ขั้นที่ 1: ก่อกวน",
-    material:"สารตัวอย่าง: โซเดียมคลอไรด์ (NaCl)",
-    role:"หลักการ: แนวคิดการเพิ่มแกนควบแน่นในเมฆ",
-    cloud:"สภาพเมฆ: เริ่มก่อตัว"
-  },
-  {
-    title:"ขั้นที่ 2: เลี้ยงให้อ้วน",
-    material:"สารตัวอย่าง: สารดูดความชื้น เช่น CaCl₂",
-    role:"หลักการ: ศึกษาการพัฒนาของเมฆและหยดน้ำ",
-    cloud:"สภาพเมฆ: กำลังเติบโต"
-  },
-  {
-    title:"ขั้นที่ 3: โจมตี",
-    material:"แนวคิด: กระบวนการเมฆอุ่นหรือเมฆเย็น",
-    role:"หลักการ: ส่งเสริมการรวมตัวของหยดน้ำหรือผลึกน้ำแข็ง",
-    cloud:"สภาพเมฆ: พัฒนาเต็มที่"
-  }
-];
-
-function updateUI() {
-  const d=data[state.stage];
-
-  $("scienceTitle").textContent=d.title;
-  $("scienceMaterial").textContent=d.material;
-  $("scienceRole").textContent=d.role;
-  $("scienceCloud").textContent=d.cloud;
-
-  for(let i=1;i<=3;i++) {
-    $("card"+i).classList.toggle("active",state.stage===i);
-  }
-
-  $("cloudType").textContent=[
-    "ยังไม่ก่อตัว",
-    "เริ่มก่อตัว",
-    "กำลังเติบโต",
-    "เมฆพัฒนาเต็มที่"
-  ][state.stage];
-
-  $("cloudStatus").textContent=[
-    "ยังไม่ก่อตัว",
-    "เริ่มก่อตัว",
-    "กำลังเติบโต",
-    "เมฆพัฒนาเต็มที่"
-  ][state.stage];
-}
-
-// แถบปรับค่า
-function updateSettings() {
-  state.base=Number($("baseInput").value);
-  state.humidity=Number($("humidityInput").value);
-  state.wind=Number($("windInput").value);
-
-  $("baseValue").textContent=state.base.toLocaleString()+" ฟุต";
-  $("baseRead").textContent=state.base.toLocaleString()+" ฟุต";
-  $("humidityValue").textContent=state.humidity+"%";
-  $("windValue").textContent=state.wind+" กม./ชม.";
-
-  $("temperature").textContent=
-    (29-(state.base-3000)*.0015).toFixed(1)+"°C";
-}
-
-["baseInput","humidityInput","windInput"].forEach(id=>{
-  $(id).addEventListener("input",updateSettings);
-});
-
-// ปุ่มเลือกขั้นตอน
-document.querySelectorAll("[data-stage]").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    stopAuto();
-    setStage(Number(btn.dataset.stage));
-  });
-});
-
-// สร้างฝน
-function addRain() {
-  const x=300+Math.random()*300;
-  const y=190+Math.random()*40;
-
-  const el=svg("line",{
-    x1:x,y1:y,x2:x-4,y2:y+15,
-    stroke:"#168bd0",
-    "stroke-width":2,
-    opacity:.8
-  },$("rainLayer"));
-
-  state.drops.push({
-    el,x,y,v:170+Math.random()*120
-  });
-
-  if(state.drops.length>120) {
-    state.drops.shift().el.remove();
-  }
-}
-
-// วงจรภาพเคลื่อนไหว
-let previous=performance.now();
-let rainTimer=0;
-
-function frame(now) {
-  requestAnimationFrame(frame);
-
-  const dt=Math.min(.05,(now-previous)/1000);
-  previous=now;
-
-  if(state.paused)return;
-
-  const growthTargets=[0,.3,.68,1];
-
-  const target=growthTargets[state.stage];
-
-  state.growth+=(target-state.growth)*Math.min(1,dt*.65);
-
-  const scale=.48+state.growth*.58;
-
-  $("cloud").setAttribute(
-    "transform",
-    `translate(450 280) scale(${scale})`
-  );
-
-  const top=state.base+state.growth*9000;
-
-  $("topRead").textContent=Math.round(top).toLocaleString()+" ฟุต";
-
-  const canRain=
-    state.stage===3 &&
-    state.humidity>=60 &&
-    state.growth>.8;
-
-  if(canRain) {
-    state.rain=Math.min(100,state.rain+dt*.8);
-
-    rainTimer+=dt;
-
-    if(rainTimer>.07) {
-      rainTimer=0;
-      addRain();
-    }
-
-    $("green").setAttribute("opacity",Math.min(.8,state.rain/90));
-    $("pond").setAttribute("opacity",.4+state.rain/150);
-
-  }
-
-  state.drops.forEach(d=>{
-    d.y+=d.v*dt;
-    d.x-=state.wind*.12*dt;
-
-    d.el.setAttribute("x1",d.x);
-    d.el.setAttribute("y1",d.y);
-    d.el.setAttribute("x2",d.x-4);
-    d.el.setAttribute("y2",d.y+15);
-
-    if(d.y>480) {
-      d.dead=true;
-      d.el.remove();
-    }
-  });
-
-  state.drops=state.drops.filter(d=>!d.dead);
-
-  $("rainRead").textContent=state.rain.toFixed(1)+" มม.";
-
-  if(state.stage===3 && !canRain) {
-    $("cloudStatus").textContent="เมฆพัฒนาแล้ว แต่ความชื้นยังไม่เพียงพอ";
-  } else if(canRain) {
-    $("cloudStatus").textContent="กำลังเกิดฝนจำลอง";
-  }
-
-}
-
-// ระบบอัตโนมัติ
-function wait(ms,id) {
-  return new Promise(resolve=>{
-    const start=performance.now();
-
-    function check(now) {
-      if(id!==state.autoId) {
-        resolve(false);
-        return;
-      }
-
-      if(state.paused) {
-        requestAnimationFrame(check);
-        return;
-      }
-
-      if(now-start>=ms) {
-        resolve(true);
-      } else {
-        requestAnimationFrame(check);
-      }
-    }
-
-    requestAnimationFrame(check);
-  });
-}
-
-function stopAuto() {
-  state.autoId++;
-  state.auto=false;
-  $("autoBtn").disabled=false;
-}
-
-$("autoBtn").addEventListener("click",async()=>{
-  stopAuto();
-
-  const id=state.autoId;
-  state.auto=true;
-  state.autoId=id+1;
-
-  const current=state.autoId;
-
-  $("autoBtn").disabled=true;
-
-  setStage(1);
-  if(!await wait(1800,current))return;
-
-  setStage(2);
-  if(!await wait(1800,current))return;
-
-  setStage(3);
-
-  $("message").textContent="จำลองครบทุกขั้นตอนแล้ว";
-  state.auto=false;
-  $("autoBtn").disabled=false;
-});
-
-$("pauseBtn").addEventListener("click",()=>{
-  state.paused=!state.paused;
-
-  $("pauseBtn").textContent=
-    state.paused?"▶ เล่นต่อ":"Ⅱ หยุด";
-});
-
-$("resetBtn").addEventListener("click",()=>{
-  stopAuto();
-
-  state.paused=false;
-  state.stage=0;
-  state.growth=0;
-  state.rain=0;
-  state.drops.forEach(d=>d.el.remove());
-  state.drops=[];
-
-  $("green").setAttribute("opacity",0);
-  $("pond").setAttribute("opacity",1);
-
-  $("rainLayer").innerHTML="";
-
-  state.planes=[
-    {x:180,y:360},
-    {x:350,y:360},
-    {x:520,y:360}
-  ];
-
-  $("pauseBtn").textContent="Ⅱ หยุด";
-  $("message").textContent="รีเซ็ตระบบแล้ว";
-
-  drawPlanes();
-  updateUI();
-});
-
-// โหมดมืด
-$("themeBtn").addEventListener("click",()=>{
-  const root=document.documentElement;
-
-  root.dataset.theme=
-    root.dataset.theme==="dark"?"light":"dark";
-
-  $("themeBtn").textContent=
-    root.dataset.theme==="dark"?"☀️ โหมดสว่าง":"🌙 โหมดมืด";
-
-  try {
-    localStorage.setItem("rain-theme",root.dataset.theme);
-  } catch(e) {}
-});
-
-try {
-  const saved=localStorage.getItem("rain-theme");
-
-  if(saved==="dark") {
-    document.documentElement.dataset.theme="dark";
-    $("themeBtn").textContent="☀️ โหมดสว่าง";
-  }
-} catch(e) {}
-
-// เต็มจอ
-$("fullBtn").addEventListener("click",async()=>{
-  try {
-    if(!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen();
-    } else {
-      await document.exitFullscreen();
-    }
-  } catch(e) {
-    $("message").textContent="เบราว์เซอร์ไม่รองรับการเปิดเต็มจอ";
-  }
-});
-
-document.addEventListener("fullscreenchange",()=>{
-  $("fullBtn").textContent=
-    document.fullscreenElement?"✕ ออกจากเต็มจอ":"⛶ เต็มจอ";
-});
-
-// เริ่มต้น
-drawPlanes();
-updateUI();
-updateSettings();
-requestAnimationFrame(frame);
-
-</script>
-</body>
-</html>
+      </html>
