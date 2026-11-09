@@ -1,1304 +1,332 @@
-<!DOCTYPE html>
-<html lang="th" data-theme="light">
+<!doctype html>
+<html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#dceeff">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>ห้องปฏิบัติการจำลองฝนหลวง</title>
-
 <style>
-:root {
-  --bg:#edf3f9;
-  --panel:#fff;
-  --text:#172b40;
-  --muted:#718195;
-  --line:#dce5ed;
-  --soft:#f2f7fb;
-  --accent:#1877b9;
-  --accent2:#d9edff;
-  --green:#27834b;
-}
-
-[data-theme="dark"] {
-  color-scheme:dark;
-  --bg:#101722;
-  --panel:#1b2736;
-  --text:#eef5fc;
-  --muted:#a6b5c7;
-  --line:#344456;
-  --soft:#263447;
-  --accent:#62b7fa;
-  --accent2:#263f58;
-  --green:#75d69b;
-}
-
-* {
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
-
-html,body {
-  margin:0;
-  width:100%;
-  min-height:100%;
-  background:var(--bg);
-  color:var(--text);
-  font-family:system-ui,"Noto Sans Thai",sans-serif;
-}
-
-body {
-  min-height:100dvh;
-  overflow-x:hidden;
-}
-
-button,input {
-  font:inherit;
-}
-
-button {
-  cursor:pointer;
-  touch-action:manipulation;
-}
-
-.topbar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  padding:12px 20px;
-  background:var(--panel);
-  border-bottom:1px solid var(--line);
-}
-
-.brand {
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.logo {
-  width:43px;
-  height:43px;
-  border-radius:13px;
-  display:grid;
-  place-items:center;
-  background:var(--accent2);
-  font-size:25px;
-}
-
-h1 {
-  font-size:clamp(16px,2vw,23px);
-  margin:0;
-}
-
-h2 {
-  font-size:17px;
-  margin:0 0 12px;
-}
-
-h3 {
-  font-size:14px;
-  margin:0 0 5px;
-}
-
-.sub {
-  font-size:10px;
-  color:var(--muted);
-  letter-spacing:1px;
-}
-
-.toolbar {
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-}
-
-.btn {
-  border:1px solid var(--line);
-  background:var(--soft);
-  color:var(--text);
-  padding:10px 14px;
-  border-radius:10px;
-  font-size:13px;
-  min-height:42px;
-}
-
-.btn:active {
-  transform:scale(.97);
-}
-
-.btn:disabled {
-  opacity:.5;
-  cursor:not-allowed;
-}
-
-.primary {
-  background:var(--accent);
-  color:white;
-  border-color:var(--accent);
-}
-
-.layout {
-  width:100%;
-  max-width:1750px;
-  margin:auto;
-  padding:15px;
-  display:grid;
-  grid-template-columns:minmax(0,1.5fr) minmax(320px,.8fr);
-  gap:15px;
-  align-items:start;
-}
-
-.panel {
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:15px;
-  padding:15px;
-  min-width:0;
-}
-
-.scene-header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:8px;
-  margin-bottom:12px;
-}
-
-.live {
-  color:var(--green);
-  font-size:11px;
-}
-
-.scene-wrap {
-  width:100%;
-  overflow:hidden;
-  border-radius:12px;
-  background:#b8dcf5;
-}
-
-#scene {
-  display:block;
-  width:100%;
-  height:auto;
-  touch-action:pan-y;
-}
-
-#aircraftLayer {
-  pointer-events:none;
-}
-
-.aircraft {
-  pointer-events:auto;
-  touch-action:none;
-  cursor:grab;
-}
-
-.aircraft:active {
-  cursor:grabbing;
-}
-
-.scene-label {
-  fill:#173c58;
-  font-size:15px;
-  font-weight:bold;
-}
-
-.scene-label-bg {
-  fill:white;
-  fill-opacity:.8;
-}
-
-.legend {
-  display:flex;
-  gap:14px;
-  flex-wrap:wrap;
-  padding:10px 4px;
-  font-size:11px;
-  color:var(--muted);
-}
-
-.metrics {
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-}
-
-.metric {
-  background:var(--soft);
-  border-radius:10px;
-  padding:10px;
-}
-
-.metric span {
-  display:block;
-  color:var(--muted);
-  font-size:10px;
-}
-
-.metric strong {
-  font-size:13px;
-  overflow-wrap:anywhere;
-}
-
-.side {
-  display:grid;
-  gap:12px;
-}
-
-.stage {
-  display:grid;
-  grid-template-columns:30px 1fr;
-  gap:9px;
-  padding:11px;
-  border:1px solid var(--line);
-  border-radius:11px;
-  margin-bottom:8px;
-  background:var(--soft);
-}
-
-.stage.active {
-  border-color:var(--accent);
-  background:var(--accent2);
-}
-
-.number {
-  width:28px;
-  height:28px;
-  display:grid;
-  place-items:center;
-  border-radius:9px;
-  color:white;
-  background:var(--accent);
-  font-weight:bold;
-}
-
-.stage p {
-  font-size:11px;
-  color:var(--muted);
-  margin:3px 0;
-}
-
-.stage small {
-  font-size:10px;
-  color:var(--muted);
-}
-
-.stage button {
-  margin-top:7px;
-  min-height:38px;
-  font-size:11px;
-  padding:7px 12px;
-}
-
-.info {
-  background:var(--accent2);
-  padding:12px;
-  border-radius:11px;
-  margin-top:10px;
-}
-
-.info p {
-  font-size:11px;
-  margin:5px 0;
-}
-
-.range {
-  margin:13px 0;
-}
-
-.range label {
-  display:flex;
-  justify-content:space-between;
-  font-size:12px;
-  gap:8px;
-}
-
-.range output {
-  color:var(--accent);
-  font-weight:bold;
-}
-
-input[type=range] {
-  width:100%;
-  min-height:35px;
-  accent-color:var(--accent);
-  touch-action:pan-y;
-}
-
-.weather {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-}
-
-.weather div {
-  background:var(--soft);
-  padding:10px;
-  border-radius:9px;
-}
-
-.weather span {
-  display:block;
-  color:var(--muted);
-  font-size:10px;
-}
-
-.weather strong {
-  font-size:12px;
-}
-
-.actions {
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-}
-
-.actions button {
-  flex:1;
-  min-width:90px;
-}
-
-.status {
-  font-size:11px;
-  color:var(--green);
-}
-
-.note {
-  font-size:10px;
-  color:var(--muted);
-  margin:10px 0 0;
-}
-
-footer {
-  text-align:center;
-  color:var(--muted);
-  font-size:11px;
-  padding:15px;
-}
-
-/* Tablet landscape */
-@media (min-width:700px) and (orientation:landscape) {
-  .layout {
-    grid-template-columns:minmax(0,1.5fr) minmax(330px,.8fr);
-  }
-
-  .scene-panel {
-    position:sticky;
-    top:10px;
-  }
-
-  .panel {
-    padding:16px;
-  }
-}
-
-/* Tablet portrait */
-@media (min-width:700px) and (orientation:portrait) {
-  .layout {
-    grid-template-columns:1fr;
-  }
-
-  .side {
-    grid-template-columns:1fr 1fr;
-  }
-}
-
-/* Mobile */
-@media(max-width:699px) {
-  .topbar {
-    padding:10px;
-  }
-
-  .layout {
-    grid-template-columns:1fr;
-    padding:9px;
-    gap:10px;
-  }
-
-  .panel {
-    padding:11px;
-  }
-
-  .metrics {
-    grid-template-columns:1fr 1fr;
-  }
-
-  .side {
-    grid-template-columns:1fr;
-  }
-
-  .toolbar {
-    flex-direction:column;
-  }
-
-  .toolbar .btn {
-    font-size:10px;
-    padding:7px;
-  }
-}
-
-@media(prefers-reduced-motion:reduce) {
-  *,*::before,*::after {
-    animation:none!important;
-    transition:none!important;
-  }
-}
+:root{--bg:#f3f2ec;--card:#fff;--fg:#1c1f24;--mut:#667080;--line:#d9d7cd;--acc:#2b7de0;--accf:#fff;--chip:#eef1f5;--ok:#2f7a1f;--s1:#7ab9ee;--s2:#c4e3fb;--m:#9db4c4;--h1:#7fa860;--h2:#5e8f3a;--soil:#c9a66b;--sun:#fac775;--pond:#85b7eb;--ink:#1c1f24}
+[data-theme=dark]{--bg:#0f1722;--card:#1a2535;--fg:#eef2f7;--mut:#9aa8b8;--line:#2c3a4e;--acc:#66b8ff;--accf:#06223d;--chip:#243246;--ok:#7bd88f;--s1:#0d1f3a;--s2:#2f5078;--m:#3c4f66;--h1:#2f4a30;--h2:#223a24;--soil:#5b4630;--sun:#e8e6dc;--pond:#3f78b5;--ink:#eef2f7}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,"Noto Sans Thai","Sarabun",sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px clamp(12px,3vw,32px);border-bottom:1px solid var(--line)}
+.logo{width:48px;height:48px;border-radius:12px;background:var(--chip);display:grid;place-items:center;font-size:24px}
+.ttl{flex:1;min-width:200px}
+.eye{font-size:11px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
+h1{font-size:clamp(18px,3.2vw,26px);margin:0;font-weight:600}
+h2{font-size:clamp(17px,2.4vw,21px);margin:0 0 10px;font-weight:600}
+.tools{display:flex;gap:8px}
+.btn{font:inherit;font-size:14px;background:var(--chip);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer;min-height:44px}
+.btn:hover{border-color:var(--acc)}
+.btn.pri{background:var(--acc);color:var(--accf);border-color:var(--acc);font-weight:600}
+.btn:focus-visible,input:focus-visible,.pl:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+main{display:grid;gap:16px;padding:16px clamp(12px,3vw,32px) 32px;max-width:1280px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;min-width:0}
+.col{display:grid;gap:16px;align-content:start;min-width:0}
+@media(min-width:980px){main{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}.sticky{position:sticky;top:12px}}
+svg{display:block;width:100%;height:auto;border-radius:12px;touch-action:pan-y}
+.pl{cursor:grab;touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--mut);padding:8px 2px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:640px){.stats.w4{grid-template-columns:repeat(4,1fr)}}
+.st{background:var(--chip);border-radius:12px;padding:10px 12px}
+.st small{display:block;font-size:12px;color:var(--mut)}
+.st b{font-size:clamp(15px,2vw,18px);font-weight:600}
+.step{display:flex;gap:12px;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--card)}
+.step.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.num{flex:none;width:36px;height:36px;border-radius:10px;background:var(--acc);color:var(--accf);display:grid;place-items:center;font-weight:700}
+.step h3{margin:0;font-size:17px}
+.step p{margin:2px 0;font-size:14px;color:var(--mut)}
+.sci{background:var(--chip);border-radius:14px;padding:14px;font-size:14px}
+.sci div{padding:2px 0}
+.note{font-size:12.5px;color:var(--mut);margin-top:8px}
+.sl{margin-bottom:14px}
+.sl label{display:flex;justify-content:space-between;font-size:14px}
+.sl label b{color:var(--acc);font-weight:600}
+input[type=range]{width:100%;height:32px;accent-color:var(--acc)}
+.acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.live{color:var(--ok);font-size:13px}
+.two{display:grid;gap:16px}
+@media(min-width:640px) and (max-width:979px){.two{grid-template-columns:1fr 1fr}}
+.tel{display:grid;gap:10px;grid-template-columns:1fr;margin-top:6px}
+@media(min-width:640px){.tel{grid-template-columns:repeat(3,1fr)}}
+.pc{background:var(--chip);border-radius:12px;padding:10px 12px;font-size:13px}
+.ph{display:flex;align-items:center;gap:6px;font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%}
+.mut{color:var(--mut);display:block;margin-bottom:4px}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:1px 0}
+.kv b{font-weight:600;text-align:right}
+.chip{margin-top:6px;border-radius:8px;padding:4px 8px;font-size:12.5px;font-weight:600}
+.chip.okc{background:rgba(47,122,31,.16);color:var(--ok)}
+.chip.no{background:rgba(226,75,74,.16);color:#c23b3a}
+[data-theme=dark] .chip.no{color:#ff9694}
+footer{text-align:center;color:var(--mut);font-size:13px;padding:0 12px 24px}
+@media (prefers-reduced-motion:no-preference){.dw{animation:dr 70s ease-in-out infinite alternate}}
+@keyframes dr{to{transform:translateX(60px)}}
 </style>
 </head>
-
 <body>
-
-<header class="topbar">
-  <div class="brand">
-    <div class="logo">☁️</div>
-    <div>
-      <div class="sub">LEARNING SIMULATOR</div>
-      <h1>ห้องปฏิบัติการจำลองฝนหลวง</h1>
-    </div>
-  </div>
-
-  <div class="toolbar">
-    <button class="btn" id="themeBtn">🌙 โหมดมืด</button>
-    <button class="btn" id="fullBtn">⛶ เต็มจอ</button>
-  </div>
+<header>
+<div class="logo" aria-hidden="true">☁</div>
+<div class="ttl"><div class="eye">Learning Simulator</div><h1>ห้องปฏิบัติการจำลองฝนหลวง</h1></div>
+<div class="tools"><button class="btn" id="theme" type="button"></button><button class="btn" id="fs" type="button">⛶ เต็มจอ</button></div>
 </header>
-
-<main class="layout">
-
-<section class="panel scene-panel">
-
-  <div class="scene-header">
-    <div>
-      <div class="sub">LIVE SIMULATION</div>
-      <h2>ภาพจำลองสภาพอากาศ</h2>
-    </div>
-    <span class="live">● ระบบจำลอง</span>
-  </div>
-
-  <div class="scene-wrap">
-    <svg id="scene" viewBox="0 0 900 560">
-
-      <defs>
-        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#73b8ee"/>
-          <stop offset="100%" stop-color="#e4f3ff"/>
-        </linearGradient>
-
-        <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#a99a65"/>
-          <stop offset="100%" stop-color="#735337"/>
-        </linearGradient>
-      </defs>
-
-      <rect width="900" height="560" fill="url(#sky)"/>
-
-      <circle cx="780" cy="85" r="36" fill="#ffdf89"/>
-
-      <g fill="white" opacity=".65">
-        <ellipse cx="130" cy="95" rx="70" ry="17"/>
-        <ellipse cx="160" cy="82" rx="40" ry="24"/>
-        <ellipse cx="650" cy="120" rx="65" ry="15"/>
-      </g>
-
-      <path d="M0 410 L130 330 L240 390 L370 300 L490 390 L620 320 L770 390 L900 335 L900 560 L0 560Z" fill="#a6b8c4"/>
-
-      <path d="M0 430 Q200 390 400 425 T900 420 L900 560 L0 560Z" fill="#62894e"/>
-
-      <path d="M0 475 Q200 435 400 470 T900 465 L900 560 L0 560Z" fill="url(#land)"/>
-
-      <path id="green" d="M0 475 Q200 435 400 470 T900 465 L900 560 L0 560Z" fill="#55a84a" opacity="0"/>
-
-      <path id="pond" d="M700 500 Q760 465 850 495 Q800 530 700 510Z" fill="#4ba9e8"/>
-
-      <g id="cloud" transform="translate(450 280) scale(.5)">
-        <ellipse cx="0" cy="0" rx="175" ry="55" fill="#d6dce3"/>
-        <ellipse cx="-90" cy="-20" rx="75" ry="75" fill="#f6f8fa"/>
-        <ellipse cx="0" cy="-65" rx="90" ry="100" fill="#fff"/>
-        <ellipse cx="95" cy="-25" rx="90" ry="75" fill="#f8f9fb"/>
-        <ellipse cx="20" cy="-125" rx="60" ry="75" fill="#fff"/>
-      </g>
-
-      <line id="zeroLine" x1="0" x2="900" y1="180" y2="180" stroke="#1688cb" stroke-width="2" stroke-dasharray="10 8"/>
-
-      <text x="15" y="168" fill="#145c91" font-size="15" font-weight="bold">ระดับ 0°C (จำลอง)</text>
-
-      <g id="rainLayer"></g>
-
-      <!-- ชั้นแสดงละอองจำลอง -->
-      <g id="particleLayer" pointer-events="none"></g>
-
-      <g id="aircraftLayer"></g>
-
-      <rect x="15" y="510" width="210" height="32" rx="9" class="scene-label-bg"/>
-      <text x="27" y="531" class="scene-label">พื้นที่เกษตรจำลอง</text>
-
-    </svg>
-  </div>
-
-  <div class="legend">
-    <span>☁️ เมฆ</span>
-    <span>┄ ระดับ 0°C</span>
-    <span>💧 ฝน</span>
-    <span>✈ เครื่องบิน</span>
-    <span>✧ ละอองจำลอง</span>
-  </div>
-
-  <div class="metrics">
-    <div class="metric">
-      <span>สถานะเมฆ</span>
-      <strong id="cloudStatus">ยังไม่ก่อตัว</strong>
-    </div>
-    <div class="metric">
-      <span>ฐานเมฆ</span>
-      <strong id="baseRead">5,000 ฟุต</strong>
-    </div>
-    <div class="metric">
-      <span>ยอดเมฆ</span>
-      <strong id="topRead">5,000 ฟุต</strong>
-    </div>
-    <div class="metric">
-      <span>ฝนจำลอง</span>
-      <strong id="rainRead">0 มม.</strong>
-    </div>
-  </div>
-
+<main>
+<div class="col">
+<section class="card sticky" id="simcard">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><div><div class="eye">Live Simulation</div><h2>ภาพจำลองสภาพอากาศ</h2></div><span class="live">● ระบบจำลอง</span></div>
+<svg id="sc" viewBox="0 0 800 440" role="img" aria-label="ภาพจำลองเมฆและเครื่องบินฝนหลวง ลากเครื่องบินไปวางตามขั้นตอน">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--s1)"/><stop offset="1" style="stop-color:var(--s2)"/></linearGradient></defs>
+<rect width="800" height="440" fill="url(#sky)"/>
+<circle cx="700" cy="70" r="30" style="fill:var(--sun)"/>
+<g class="dw"><ellipse cx="120" cy="60" rx="60" ry="12" fill="#fff" fill-opacity=".7"/><ellipse cx="150" cy="50" rx="34" ry="12" fill="#fff" fill-opacity=".7"/><ellipse cx="520" cy="46" rx="50" ry="10" fill="#fff" fill-opacity=".5"/></g>
+<polygon points="0,380 90,290 170,350 260,260 360,355 470,285 580,350 690,270 800,340 800,400 0,400" style="fill:var(--m)"/>
+<path d="M0 390 Q150 330 320 370 T620 355 T800 370 V440 H0Z" style="fill:var(--h1)"/>
+<path d="M0 400 Q200 360 400 392 T800 388 V440 H0Z" style="fill:var(--h2)"/>
+<g id="trees"></g>
+<rect y="392" width="800" height="48" style="fill:var(--soil)"/>
+<rect id="grn" y="392" width="800" height="48" fill="#639922" fill-opacity="0"/>
+<g id="crops"></g>
+<ellipse id="pond" cx="600" cy="422" rx="40" ry="8" style="fill:var(--pond)"/>
+<rect id="dim" width="800" height="392" fill="#1c1f24" fill-opacity="0"/>
+<rect id="tgt" x="320" y="394" width="160" height="44" rx="6" fill="none" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="6 4"/>
+<rect x="340" y="420" width="120" height="16" rx="4" fill="#1c1f24" fill-opacity=".6"/>
+<text x="400" y="428" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#fff">พื้นที่เป้าหมาย</text>
+<ellipse id="shd" cx="400" cy="408" rx="120" ry="9" fill="#000" fill-opacity="0"/>
+<g id="rbw" opacity="0"><path d="M120 392A280 280 0 0 1 680 392" fill="none" stroke="#E24B4A" stroke-width="5" stroke-opacity=".5"/><path d="M130 392A270 270 0 0 1 670 392" fill="none" stroke="#EF9F27" stroke-width="5" stroke-opacity=".5"/><path d="M140 392A260 260 0 0 1 660 392" fill="none" stroke="#639922" stroke-width="5" stroke-opacity=".5"/><path d="M150 392A250 250 0 0 1 650 392" fill="none" stroke="#378ADD" stroke-width="5" stroke-opacity=".5"/></g>
+<line id="fzl" x1="0" x2="800" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="8 6"/>
+<text id="fzt" x="12" font-size="14" fill="#378ADD" style="font-weight:600">ระดับ 0°C (จำลอง)</text>
+<g id="rul"></g>
+<line id="bsl" x2="800" style="stroke:var(--ink);opacity:.4" stroke-dasharray="2 5"/><text id="bst" text-anchor="end" font-size="11" style="fill:var(--ink)"></text>
+<line id="tpl" x2="800" style="stroke:var(--ink);opacity:.4" stroke-dasharray="2 5"/><text id="tpt" text-anchor="end" font-size="11" style="fill:var(--ink)"></text>
+<g id="cl"></g><path id="bolt" d="M400 285L388 325L402 325L384 372" fill="none" stroke="#FAC775" stroke-width="3" opacity="0"/><g id="ice"></g><g id="vap"></g><g id="rn"></g><g id="rp"></g><g id="tr"></g><rect id="fl" width="800" height="440" fill="#fff" opacity="0"/><rect id="zb" visibility="hidden" width="300" rx="6" fill-opacity=".16" stroke-width="1.5" stroke-dasharray="6 4"/><text id="zbt" visibility="hidden" font-size="12" style="fill:var(--ink);font-weight:600"></text><g id="shs"></g><g id="pls"></g>
+</svg>
+<div class="legend"><span>☁ เมฆ</span><span>┄ ระดับ 0°C</span><span>💧 ฝน</span><span>✈ เครื่องบิน</span><span>✧ ละอองจำลอง</span></div>
+<div class="stats w4">
+<div class="st"><small>สถานะเมฆ</small><b id="vS">ยังไม่ก่อตัว</b></div>
+<div class="st"><small>ฐานเมฆ</small><b id="vB"></b></div>
+<div class="st"><small>ยอดเมฆ</small><b id="vT"></b></div>
+<div class="st"><small>ฝนในเป้าหมาย</small><b id="vR">0.0 มม.</b></div>
+</div>
+<div class="eye" style="margin:14px 0 6px">Aircraft Telemetry · ตำแหน่งเครื่องบิน</div>
+<div class="tel" id="tel"></div>
 </section>
-
-<aside class="side">
-
-<section class="panel">
-  <div class="sub">MISSION CONTROL</div>
-  <h2>ขั้นตอนการจำลอง</h2>
-
-  <article class="stage" id="card1">
-    <div class="number">1</div>
-    <div>
-      <h3>ก่อกวน</h3>
-      <p>ศึกษาการสร้างแกนควบแน่นในเมฆ</p>
-      <small>ตัวอย่างสาร: โซเดียมคลอไรด์ (NaCl)</small>
-      <br>
-      <button class="btn" data-stage="1">เลือกขั้นตอนที่ 1</button>
-    </div>
-  </article>
-
-  <article class="stage" id="card2">
-    <div class="number">2</div>
-    <div>
-      <h3>เลี้ยงให้อ้วน</h3>
-      <p>ศึกษาการเติบโตและพัฒนาตัวของเมฆ</p>
-      <small>ตัวอย่างสารในบทเรียน: สารดูดความชื้น เช่น CaCl₂</small>
-      <br>
-      <button class="btn" data-stage="2">เลือกขั้นตอนที่ 2</button>
-    </div>
-  </article>
-
-  <article class="stage" id="card3">
-    <div class="number">3</div>
-    <div>
-      <h3>โจมตี</h3>
-      <p>ศึกษาการรวมตัวของหยดน้ำหรือผลึกน้ำแข็ง</p>
-      <small>ตัวอย่างแนวคิด: กระบวนการเมฆอุ่นและเมฆเย็น</small>
-      <br>
-      <button class="btn" data-stage="3">เลือกขั้นตอนที่ 3</button>
-    </div>
-  </article>
-
-  <div class="info">
-    <strong>🔬 ข้อมูลทางวิทยาศาสตร์</strong>
-    <p id="scienceTitle">รอเริ่มการจำลอง</p>
-    <p id="scienceMaterial">สารตัวอย่าง: —</p>
-    <p id="scienceRole">หลักการ: —</p>
-    <p id="scienceCloud">สภาพเมฆ: —</p>
-    <p class="note">สารที่กล่าวถึงเป็นตัวอย่างทางการศึกษา ไม่ใช่สูตรหรือคำแนะนำในการนำไปใช้จริง</p>
-  </div>
+</div>
+<div class="col">
+<section class="card">
+<div class="eye">Mission Control</div><h2>ขั้นตอนการจำลอง</h2>
+<div id="steps"></div>
+<div class="sci" aria-live="polite"><b>ข้อมูลทางวิทยาศาสตร์</b>
+<div id="sA">ยังไม่ได้เริ่ม</div><div id="sB">สารตัวอย่าง: —</div><div id="sC">หลักการ: เลือกขั้นตอนเพื่อศึกษา</div><div id="sD">สภาพเมฆ: ยังไม่ก่อตัว</div><div id="sE">ผลลัพธ์: —</div><div id="sF" style="color:var(--mut)"></div>
+<div class="note">สารที่กล่าวถึงเป็นตัวอย่างทางการศึกษา ไม่ใช่สูตรหรือคำแนะนำในการนำไปใช้จริง</div></div>
 </section>
-
-<section class="panel">
-  <div class="sub">ATMOSPHERE CONTROL</div>
-  <h2>ปรับสภาพบรรยากาศ</h2>
-
-  <div class="range">
-    <label>ความสูงฐานเมฆ <output id="baseValue">5,000 ฟุต</output></label>
-    <input id="baseInput" type="range" min="3000" max="12000" step="250" value="5000">
-  </div>
-
-  <div class="range">
-    <label>ความชื้นสัมพัทธ์ <output id="humidityValue">65%</output></label>
-    <input id="humidityInput" type="range" min="20" max="100" value="65">
-  </div>
-
-  <div class="range">
-    <label>ความเร็วลม <output id="windValue">12 กม./ชม.</output></label>
-    <input id="windInput" type="range" min="0" max="40" value="12">
-  </div>
-
-  <div class="weather">
-    <div>
-      <span>อุณหภูมิจำลอง</span>
-      <strong id="temperature">25°C</strong>
-    </div>
-    <div>
-      <span>สภาพเมฆ</span>
-      <strong id="cloudType">เมฆเริ่มก่อตัว</strong>
-    </div>
-    <div>
-      <span>ระดับอ้างอิง</span>
-      <strong>18,000 ฟุต</strong>
-    </div>
-    <div>
-      <span>ทิศทางลม</span>
-      <strong>ตะวันออกเฉียงใต้</strong>
-    </div>
-  </div>
-
-  <p class="note">ตัวเลขทั้งหมดเป็นค่าจำลอง ไม่ใช่การวัดอากาศจริง</p>
+<div class="two">
+<section class="card">
+<div class="eye">Atmosphere Control</div><h2>ปรับสภาพบรรยากาศ</h2>
+<div class="sl"><label for="rB">ความสูงฐานเมฆ <b id="oB"></b></label><input type="range" id="rB" min="2000" max="8000" step="250" value="5000"></div>
+<div class="sl"><label for="rH">ความชื้นสัมพัทธ์ <b id="oH"></b></label><input type="range" id="rH" min="30" max="100" step="1" value="65"></div>
+<div class="sl"><label for="rW">ความเร็วลม <b id="oW"></b></label><input type="range" id="rW" min="0" max="40" step="1" value="12"></div>
+<div class="sl"><label for="rS">สถานการณ์</label><select id="rS" style="width:100%;font:inherit;font-size:14px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--chip);color:var(--fg);padding:8px"><option value="n">ตามแผน (สภาพอากาศเหมาะสม)</option><option value="w">ลมแรง เมฆและฝนถูกพัดออกนอกเป้าหมาย</option><option value="d">อากาศแห้ง ฝนระเหยก่อนถึงพื้น</option><option value="c">เมฆสลายตัวกลางทาง ถ้าปฏิบัติช้า</option></select></div>
+<div class="stats"><div class="st"><small>อุณหภูมิจำลอง</small><b id="vTe"></b></div><div class="st"><small>สภาพเมฆ</small><b id="vC"></b></div><div class="st"><small>ระดับอ้างอิง</small><b>18,000 ฟุต</b></div><div class="st"><small>ทิศทางลม</small><b>ตะวันออกเฉียงใต้</b></div></div>
+<div class="note">ตัวเลขทั้งหมดเป็นค่าจำลอง ไม่ใช่การวัดอากาศจริง</div>
 </section>
-
-<section class="panel">
-  <h2>ควบคุมการจำลอง</h2>
-
-  <div class="actions">
-    <button class="btn primary" id="autoBtn">▶ เริ่มอัตโนมัติ</button>
-    <button class="btn" id="pauseBtn">Ⅱ หยุด</button>
-    <button class="btn" id="resetBtn">↻ รีเซ็ต</button>
-  </div>
-
-  <p class="note" id="message">ลากเครื่องบินด้วยนิ้วหรือเมาส์ไปยังตำแหน่งเป้าหมาย หรือเลือกขั้นตอนจากปุ่ม</p>
+<section class="card">
+<h2>ควบคุมการจำลอง</h2>
+<div class="acts"><button class="btn pri" id="auto" type="button">▶ เริ่มอัตโนมัติ</button><button class="btn" id="stop" type="button">❚❚ หยุด</button><button class="btn" id="reset" type="button">↻ รีเซ็ต</button></div>
+<div class="note">ลากเครื่องบินด้วยนิ้วหรือเมาส์ไปยังตำแหน่งเป้าหมาย หรือเลือกขั้นตอนจากปุ่ม (โฟกัสเครื่องบินแล้วใช้ปุ่มลูกศรขยับ กด Shift ค้างเพื่อขยับละเอียด)</div>
 </section>
-
-</aside>
+</div>
+</div>
 </main>
-
-<footer>
-  สื่อการเรียนรู้จำลองกระบวนการฝนหลวง • ไม่ใช่ระบบปฏิบัติการจริง
-</footer>
-
+<footer>สื่อการเรียนรู้จำลองกระบวนการฝนหลวง • ไม่ใช่ระบบปฏิบัติการจริง</footer>
 <script>
-"use strict";
-
-const $ = id => document.getElementById(id);
-const NS = "http://www.w3.org/2000/svg";
-
-const state = {
-  stage:0,
-  growth:0,
-  rain:0,
-  base:5000,
-  humidity:65,
-  wind:12,
-  paused:false,
-  auto:false,
-  autoId:0,
-  dragging:null,
-  drops:[],
-
-  // ระบบอนุภาคจำลอง
-  particles:[],
-  emitTimer:0,
-
-  planes:[
-    {x:180,y:360},
-    {x:350,y:360},
-    {x:520,y:360}
-  ]
-};
-
-const targets=[
-  {x:450,y:350,r:110},
-  {x:450,y:260,r:120},
-  {x:450,y:145,r:130}
-];
-
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-
-function svg(tag,attrs,parent) {
-  const el=document.createElementNS(NS,tag);
-  Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
-  parent.appendChild(el);
-  return el;
+const NS='http://www.w3.org/2000/svg',$=id=>document.getElementById(id),clamp=(v,a,c)=>Math.max(a,Math.min(c,v));
+function mk(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+const root=document.documentElement;
+function theme(t){root.dataset.theme=t;$('theme').textContent=t==='dark'?'☀ โหมดสว่าง':'☾ โหมดมืด';try{localStorage.setItem('rr-theme',t)}catch(e){}}
+let saved=null;try{saved=localStorage.getItem('rr-theme')}catch(e){}
+theme(saved||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+$('theme').onclick=()=>theme(root.dataset.theme==='dark'?'light':'dark');
+$('fs').onclick=()=>{const c=$('simcard');if(document.fullscreenElement)document.exitFullscreen();else if(c.requestFullscreen)c.requestFullscreen();};
+const svg=$('sc');
+let VX=0,VW=800;
+function fit(){const nar=svg.parentElement.clientWidth<560;VX=nar?170:0;VW=nar?460:800;svg.setAttribute('viewBox',VX+' 0 '+VW+' 440');$('fzt').setAttribute('x',VX+10);$('rul').setAttribute('transform','translate('+VX+',0)');}
+addEventListener('resize',fit);fit();
+const G=380,K=0.016,FZY=G-18000*K,CX=400;
+const S={b:5000,h:65,w:12};
+let SC='n',dx=0,fullT=0,collapsed=false,mmOut=0,fl=0;
+const SCD={n:'สภาพอากาศเหมาะสม ทำตามขั้นตอนได้ผลตามแผน',w:'ลมแรงมาก เมฆจะลอยออกจากพื้นที่เป้าหมายอย่างรวดเร็ว',d:'อากาศแห้งมาก ฝนอาจระเหยก่อนถึงพื้น',c:'กระแสลมกดลงจะทำให้เมฆสลายถ้าปฏิบัติช้า ต้องโจมตีให้ทันหลังเมฆโตเต็มที่'};
+const geo=()=>{const bY=G-S.b*K,Hf=3000+S.h*180,Hp=Hf*K;return{bY,Hf,Hp,top:bY-Hp,cold:bY-Hp<FZY};};
+[[60,396],[150,400],[230,398],[330,396],[470,398],[540,400],[700,397],[770,399]].forEach(p=>{const t=mk('g',{transform:'translate('+p[0]+','+p[1]+')'},$('trees'));mk('rect',{x:-2,y:-16,width:4,height:16,fill:'#854F0B'},t);mk('ellipse',{cx:0,cy:-26,rx:13,ry:17,fill:'#3B6D11'},t);mk('ellipse',{cx:-4,cy:-31,rx:6,ry:8,fill:'#639922'},t);});
+const stalks=[];for(let x=20;x<780;x+=20){mk('line',{x1:x,y1:416,x2:x,y2:410,stroke:'#7A5C2E','stroke-width':2},$('crops'));stalks.push({x,e:mk('line',{x1:x,y1:416,x2:x,y2:412,stroke:'#3B6D11','stroke-width':2.5,opacity:0},$('crops'))});}
+const CP=[[0,0,90,24],[-45,-14,40,22],[48,-12,42,22],[-30,-48,60,30],[34,-58,56,32],[0,-108,52,34],[-26,-95,38,28],[-4,-160,44,30],[18,-175,32,24],[8,-200,28,20]];
+const cg=mk('g',{},$('cl'));
+CP.forEach(p=>mk('ellipse',{cx:p[0],cy:p[1],rx:p[2]+7,ry:p[3]+7,fill:'#fff','fill-opacity':.3},cg));
+CP.forEach(p=>mk('ellipse',{cx:p[0]+5,cy:p[1]+9,rx:p[2],ry:p[3],fill:'#d3d1c7'},cg));
+const wp=CP.map(p=>mk('ellipse',{cx:p[0],cy:p[1],rx:p[2],ry:p[3],fill:'#fff'},cg));
+const und=mk('ellipse',{cx:0,cy:8,rx:80,ry:12,fill:'#5f5e5a','fill-opacity':.2},cg);
+const ice=[[-14,-200],[10,-186],[-24,-168],[24,-172],[0,-150],[-34,-140],[30,-128],[-8,-176]].map(p=>({o:p,e:mk('path',{d:'M-5 0H5M0 -5V5M-4 -4L4 4M-4 4L4 -4',fill:'none',stroke:'#378ADD','stroke-width':1.6,opacity:0},$('ice'))}));
+const pool=(n,f)=>Array.from({length:n},()=>Object.assign({on:false},f()));
+const vap=pool(24,()=>({e:mk('circle',{r:2.4,fill:'#fff',opacity:0},$('vap'))}));
+const rn=pool(80,()=>({e:mk('line',{stroke:'#378ADD','stroke-width':1.6,opacity:.7,visibility:'hidden'},$('rn'))}));
+const rp=pool(14,()=>({e:mk('ellipse',{fill:'none',stroke:'#378ADD','stroke-width':1,visibility:'hidden'},$('rp'))}));
+const COL=['#EF9F27','#378ADD','#7F77DD'];
+const tr=[];for(let i=0;i<3;i++)for(let j=0;j<14;j++)tr.push({on:false,pl:i,e:mk('circle',{r:2.2,fill:COL[i],visibility:'hidden'},$('tr'))});
+const HOME=[{x:250,y:381},{x:400,y:381},{x:550,y:381}];
+const P=HOME.map(h=>({...h}));
+const fmt=n=>n.toLocaleString('en-US');
+const TY=[{n:'เครื่องยนต์เดียว ปีกสูง',tw:0,hw:1,tp:0},{n:'สองเครื่องยนต์ ปีกสูง',tw:1,hw:1,tp:0},{n:'สองเครื่องยนต์ ปีกต่ำ หางตัวที',tw:1,hw:0,tp:1}];
+const NM=['ก่อกวน','เลี้ยงให้อ้วน','โจมตี'];
+function art(i){
+const c=COL[i],t=TY[i],st='stroke="#5F5E5A" stroke-width=".7"';
+const nac=(x,y)=>'<ellipse cx="'+x+'" cy="'+y+'" rx="7" ry="3.6" fill="#E8E6DC" '+st+'/><ellipse cx="'+(x+7)+'" cy="'+y+'" rx="1.7" ry="2.6" fill="'+c+'"/><ellipse cx="'+(x+9)+'" cy="'+y+'" rx="1.3" ry="10" fill="#2C2C2A" fill-opacity=".2"/><line class="bl" x1="'+(x+9)+'" y1="'+(y-10)+'" x2="'+(x+9)+'" y2="'+(y+10)+'" stroke="#2C2C2A" stroke-width="1.3"/>';
+let o='';
+if(t.hw)o+='<path d="M-2 -9L12 -9L17 -13L3 -13Z" fill="#C9C7BD" '+st+'/>';
+if(t.hw&&t.tw)o+=nac(6,-14);
+if(!t.tp)o+='<path d="M-26 -2L-37 -5L-36 -1L-25 1Z" fill="#E4E2D8" '+st+'/>';
+o+='<path d="M-28 -2C-28 -6 -20 -9 -8 -9L14 -8C22 -8 28 -4 29 0C28 4 22 6 14 6L-10 5C-20 5 -28 3 -28 -2Z" fill="#F4F2EA" '+st+'/>';
+o+='<path d="M-27 -.5L28 .5" stroke="'+c+'" stroke-width="2.2" fill="none"/><path d="M-24 4.2L12 4.8" stroke="#888780" stroke-width="1" fill="none"/>';
+o+='<g fill="#378ADD" fill-opacity=".8">'+[-12,-8,-4,0,4].map(x=>'<rect x="'+x+'" y="-6" width="2.6" height="2.8" rx=".6"/>').join('')+'</g>';
+o+='<path d="M15 -8L22 -7L27 -3L17 -3Z" fill="#378ADD" fill-opacity=".75" '+st+'/>';
+o+='<path d="M-27 -3L-33 -19L-25 -19L-16 -8Z" fill="'+c+'" '+st+'/>';
+if(t.tp)o+='<rect x="-37" y="-21.5" width="14" height="2.4" rx="1" fill="'+c+'" '+st+'/>';
+o+=t.hw?'<path d="M-4 -8L13 -8L23 3L5 3Z" fill="#E4E2D8" '+st+'/>':'<path d="M-4 3L13 3L24 11L4 11Z" fill="#E4E2D8" '+st+'/>';
+if(t.tw)o+=t.hw?nac(15,-3):nac(16,7);
+if(!t.tw)o+='<path d="M5 5L17 -3" stroke="#5F5E5A" stroke-width="1" fill="none"/>';
+o+=i===2?'<rect x="14" y="12.5" width="8" height="2.2" rx="1" fill="#B4B2A9" '+st+'/>':'<ellipse cx="2" cy="7.8" rx="6" ry="2.2" fill="#B4B2A9" '+st+'/>';
+o+='<g class="gr" visibility="hidden"><path d="M-2 5L-4 12M20 5L20 12" stroke="#5F5E5A" stroke-width="1.2"/><circle cx="-4" cy="13" r="3" fill="#2C2C2A"/><circle cx="20" cy="13" r="2.6" fill="#2C2C2A"/></g>';
+if(!t.tw)o+='<ellipse cx="29.5" cy="0" rx="2" ry="3.2" fill="'+c+'"/><ellipse cx="32" cy="0" rx="1.3" ry="10.5" fill="#2C2C2A" fill-opacity=".2"/><line class="bl" x1="32" y1="-10.5" x2="32" y2="10.5" stroke="#2C2C2A" stroke-width="1.3"/>';
+o+='<circle class="bk" cx="'+(t.tp?-30:-29)+'" cy="'+(t.tp?-21:-19.5)+'" r="1.3" fill="#E24B4A"/>';
+return o;}
+const gear=[],altT=[],altv=[],bls=[],bk=[],gd=[],swd=[],tc=['','',''];
+const pe=[],pp=[],prev=HOME.map(h=>({y:h.y})),til=[0,0,0];
+for(let i=0;i<3;i++){
+gd.push(mk('line',{stroke:'#fff','stroke-opacity':.4,'stroke-width':1,'stroke-dasharray':'2 4'},$('shs')));
+swd.push(mk('ellipse',{rx:22,ry:4,fill:'#000'},$('shs')));
+const e=mk('g',{class:'pl',tabindex:0,role:'button','aria-label':'เครื่องบินลำที่ '+(i+1)+' '+NM[i]+' '+TY[i].n},$('pls'));
+e.innerHTML='<circle r="40" fill="#000" fill-opacity=".001"/><g class="af" transform="scale(1.4)">'+art(i)+'</g><rect x="-40" y="-52" width="80" height="18" rx="9" fill="#fff" fill-opacity=".92" stroke="'+COL[i]+'" stroke-width="1.5"/><text class="alt" x="0" y="-43" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#1c1f24">'+(i+1)+' · 0 ฟุต</text>';
+pe.push(e);pp.push(e.querySelector('.af'));gear.push(e.querySelector('.gr'));altT.push(e.querySelector('.alt'));altv.push(-1);bk.push(e.querySelector('.bk'));
+bls.push([...e.querySelectorAll('.bl')].map(l=>({l,x:+l.getAttribute('x1'),y:(+l.getAttribute('y1')+ +l.getAttribute('y2'))/2})));
+const d=document.createElement('div');d.className='pc';
+d.innerHTML='<div class="ph"><span class="dot" style="background:'+COL[i]+'"></span><b>ลำ '+(i+1)+' '+NM[i]+'</b></div><small class="mut">'+TY[i].n+'</small><div class="kv"><span>ความสูง</span><b id="ta'+i+'"></b></div><div class="kv"><span>เทียบฐานเมฆ</span><b id="tb'+i+'"></b></div><div class="kv"><span>แนวราบ</span><b id="tc'+i+'"></b></div><div class="kv"><span>โซนที่ถูกต้อง</span><b id="td'+i+'"></b></div><div class="chip no" id="te'+i+'"></div>';
+$('tel').appendChild(d);}
+const rl=$('rul');
+mk('line',{x1:0,y1:G-20000*K,x2:0,y2:G,style:'stroke:var(--ink);opacity:.5','stroke-width':1},rl);
+for(let f=0;f<=20000;f+=2000){const y=G-f*K,big=f%4000===0;mk('line',{x1:0,y1:y,x2:big?12:6,y2:y,style:'stroke:var(--ink);opacity:.55','stroke-width':1},rl);
+if(big){const t=mk('text',{x:16,y:y+3,'font-size':10,style:'fill:var(--ink);opacity:.75'},rl);t.textContent=fmt(f);}}
+function tele(i,q,gg){
+const alt=Math.max(0,Math.round((G-P[i].y)/K/10)*10),rel=alt-S.b,lat=Math.round((P[i].x-(CX+dx))*10),z=zoneY(i),lo=Math.round((G-z[1])/K/10)*10,hi=Math.round((G-z[0])/K/10)*10;
+let ch,okk=false;
+if(Math.abs(lat)>=1500)ch='นอกโซน: ห่างเมฆเกินไป ('+fmt(Math.abs(lat))+' ม.)';
+else if(alt<lo)ch='นอกโซน: ต่ำไป '+fmt(lo-alt)+' ฟุต';
+else if(alt>hi)ch='นอกโซน: สูงไป '+fmt(alt-hi)+' ฟุต';
+else{okk=true;ch=i===2&&gg<.95?'อยู่ในโซน แต่เมฆยังโตไม่เต็ม':'✓ อยู่ในโซนที่ถูกต้อง';}
+const v=[fmt(alt)+' ฟุต ('+fmt(Math.round(alt*.3048))+' ม.)',alt<=10&&P[i].y>372?'บนพื้น':(rel>=0?'+':'−')+fmt(Math.abs(rel))+' ฟุต',Math.abs(lat)<50?'ตรงศูนย์กลางเมฆ':fmt(Math.abs(lat))+' ม. '+(lat<0?'ซ้าย':'ขวา')+'ของเมฆ',fmt(lo)+'–'+fmt(hi)+' ฟุต',ch];
+const k=v.join('|')+okk;if(k===tc[i])return;tc[i]=k;
+$('ta'+i).textContent=v[0];$('tb'+i).textContent=v[1];$('tc'+i).textContent=v[2];$('td'+i).textContent=v[3];const e=$('te'+i);e.textContent=v[4];e.className='chip '+(okk?'okc':'no');}
+const mkc={};
+function setT(id,x,y,txt){const e=$(id);e.setAttribute('x',x);e.setAttribute('y',y);if(mkc[id]!==txt){mkc[id]=txt;e.textContent=txt;}}
+const STEPS=[
+['ก่อกวน','ศึกษาการสร้างแกนควบแน่นในเมฆ','ตัวอย่างสาร: โซเดียมคลอไรด์ (NaCl)','สารดูดความชื้นช่วยให้ไอน้ำควบแน่นเป็นละอองเมฆ'],
+['เลี้ยงให้อ้วน','ศึกษาการเติบโตและพัฒนาตัวของเมฆ','ตัวอย่างสารในบทเรียน: สารดูดความชื้น เช่น CaCl₂','เมฆดูดไอน้ำเพิ่ม หยดน้ำใหญ่ขึ้น เมฆหนาขึ้น'],
+['โจมตี','ศึกษาการรวมตัวของหยดน้ำหรือผลึกน้ำแข็ง','ตัวอย่างแนวคิด: กระบวนการเมฆอุ่นและเมฆเย็น','หยดน้ำรวมตัวจนหนักพอที่จะตกเป็นฝน']];
+let sel=-1;
+STEPS.forEach((s,i)=>{const d=document.createElement('div');d.className='step';d.id='st'+i;d.innerHTML='<div class="num">'+(i+1)+'</div><div><h3>'+s[0]+'</h3><p>'+s[1]+'</p><p>'+s[2]+'</p><button class="btn" type="button" style="margin-top:6px">เลือกขั้นตอนที่ '+(i+1)+'</button></div>';d.querySelector('button').onclick=()=>{sel=i;token++;const tg=target(i);mv(i,tg.x,tg.y,900,token);last='';};$('steps').appendChild(d);});
+function target(i){const q=geo(),c=CX+dx;return i===0?{x:c-70,y:q.bY+64}:i===1?{x:c+70,y:q.bY+10}:{x:c+30,y:q.top+60};}
+function zoneY(i){const q=geo();return i===0?[q.bY+40,372]:i===1?[q.bY-16,q.bY+34]:[q.top-20,q.top+120];}
+function ok(i){const z=zoneY(i),y=P[i].y;return Math.abs(P[i].x-(CX+dx))<150&&y>z[0]&&y<z[1];}
+const free=a=>a.find(o=>!o.on);
+let g=.1,ri=0,wet=0,mm=0,drag=-1,token=0,last='',tPrev=performance.now(),acc={v:0,r:0,t:[0,0,0]};
+function frame(t){
+const dt=Math.min(.05,(t-tPrev)/1000);tPrev=t;const tm=t/1000,q=geo(),s=[ok(0),ok(1),ok(2)],vg=SC==='d'||S.h<45;
+if(SC==='c'&&g>.95&&!collapsed){fullT+=dt;if(fullT>4&&!s[2])collapsed=true;}
+const tgt=collapsed?.05:!s[0]?.1:!s[1]?.4:1;g+=(tgt-g)*Math.min(1,dt*(collapsed?.8:3));
+const rainy=g>.95&&s[2];ri+=((rainy?1:0)-ri)*Math.min(1,dt*1.5);
+wet=clamp(wet-dt*.003*(1-ri),0,1);
+const dv=Math.max(0,S.w-6)*.5,cap=Math.max(0,S.w-8)*3.5+(SC==='w'?60:0);
+dx=clamp(dx+(g>.3?-dv*dt*(S.w>25?3:1):dt*20),-cap,0);
+const sx=.55+.45*g,kx=1.3;
+$('shd').setAttribute('cx',CX+dx);$('shd').setAttribute('rx',(130*sx).toFixed(0));$('shd').setAttribute('fill-opacity',(.22*g).toFixed(2));
+$('rbw').setAttribute('opacity',(wet>.3?clamp((wet-.3)*1.5,0,.9)*(1-ri):0).toFixed(2));
+if(ri>.8&&S.h>80&&Math.random()<dt*.35)fl=1;fl=Math.max(0,fl-dt*4);
+$('fl').setAttribute('opacity',(fl*.35).toFixed(2));$('bolt').setAttribute('opacity',fl>.5?1:0);$('bolt').setAttribute('transform','translate('+dx+','+(q.bY-285)+')');
+const sh=Math.round(255-45*g*S.h/100),fc='rgb('+sh+','+sh+','+(sh+5)+')';
+wp.forEach((e,i)=>{e.setAttribute('fill',fc);e.setAttribute('rx',(CP[i][2]*(1+.04*Math.sin(tm*.9+i*1.7))).toFixed(1));e.setAttribute('cy',(CP[i][1]+1.8*Math.sin(tm*.6+i)).toFixed(1));});
+cg.parentNode.setAttribute('transform','translate('+(CX+dx+Math.sin(tm/3)*3)+','+q.bY+') scale('+(sx*kx).toFixed(3)+','+(q.Hp/220*g).toFixed(3)+')');
+und.setAttribute('fill-opacity',(.15+.4*g).toFixed(2));
+$('dim').setAttribute('fill-opacity',(.28*g*(.5+.5*ri)*(S.h/100+.3)).toFixed(3));
+$('grn').setAttribute('fill-opacity',(wet*.85).toFixed(3));
+stalks.forEach(o=>{o.e.setAttribute('y2',(416-4-12*wet).toFixed(1));o.e.setAttribute('opacity',Math.min(1,wet*1.5).toFixed(2));});
+$('pond').setAttribute('rx',(40+30*wet).toFixed(1));$('pond').setAttribute('ry',(8+6*wet).toFixed(1));
+$('fzl').setAttribute('y1',FZY);$('fzl').setAttribute('y2',FZY);$('fzt').setAttribute('y',FZY-8);
+$('bsl').setAttribute('x1',VX+26);$('bsl').setAttribute('y1',q.bY);$('bsl').setAttribute('y2',q.bY);
+$('tpl').setAttribute('x1',VX+26);$('tpl').setAttribute('y1',q.top);$('tpl').setAttribute('y2',q.top);
+setT('bst',VX+VW-8,q.bY-5,'ฐานเมฆ '+fmt(S.b)+' ฟุต');
+setT('tpt',VX+VW-8,q.top-5,'ยอดเมฆเมื่อโตเต็ม ~'+fmt(Math.round((S.b+q.Hf)/100)*100)+' ฟุต');
+const zk=drag>=0?drag:sel,zb=$('zb'),zt=$('zbt');
+if(zk>=0){const z=zoneY(zk),lo=Math.round((G-z[1])/K/10)*10,hi=Math.round((G-z[0])/K/10)*10;
+zb.setAttribute('x',CX+dx-150);zb.setAttribute('y',z[0]);zb.setAttribute('height',z[1]-z[0]);zb.setAttribute('fill',COL[zk]);zb.setAttribute('stroke',COL[zk]);zb.setAttribute('visibility','visible');
+zt.setAttribute('visibility','visible');setT('zbt',CX+dx-144,z[0]+15,'โซนขั้นที่ '+(zk+1)+' · '+fmt(lo)+'–'+fmt(hi)+' ฟุต');}
+else{zb.setAttribute('visibility','hidden');zt.setAttribute('visibility','hidden');}
+ice.forEach((o,i)=>{const on=q.cold&&g>.9;o.e.setAttribute('opacity',on?((s[2]?1:.45)*(.6+.4*Math.sin(tm*4+i))).toFixed(2):0);o.e.setAttribute('transform','translate('+(CX+dx+o.o[0]*sx*kx*1.1).toFixed(1)+','+(q.bY+o.o[1]*q.Hp/220*g).toFixed(1)+')');});
+if(s[0]){acc.v+=dt*(4+S.h/20);while(acc.v>1){acc.v--;const v=free(vap);if(!v)break;Object.assign(v,{on:true,x:VX+30+Math.random()*(VW-60),y:392,vy:-(40+Math.random()*30),ph:Math.random()*6});}}
+vap.forEach(v=>{if(!v.on)return;v.y+=v.vy*dt;v.x+=Math.sin(tm*2+v.ph)*10*dt+S.w*.3*dt;if(v.y<q.bY+16){v.on=false;v.e.setAttribute('opacity',0);return;}v.e.setAttribute('cx',v.x.toFixed(1));v.e.setAttribute('cy',v.y.toFixed(1));v.e.setAttribute('opacity',clamp((v.y-q.bY)/50,0,1)*.7);});
+acc.r+=dt*(40+S.h*.7)*ri;
+while(acc.r>1){acc.r--;const d=free(rn);if(!d)break;Object.assign(d,{on:true,x:CX+dx+(Math.random()*2-1)*80*sx,y:q.bY+16+Math.random()*8,vy:320+Math.random()*80,vx:-S.w*2.2,ev:q.bY+(G-q.bY)*(.35+Math.random()*.2)});d.e.setAttribute('visibility','visible');}
+rn.forEach(d=>{if(!d.on)return;d.y+=d.vy*dt;d.x+=d.vx*dt;if(vg&&d.y>d.ev){d.on=false;d.e.setAttribute('visibility','hidden');return;}
+if(d.y>=398){d.on=false;d.e.setAttribute('visibility','hidden');if(d.x>320&&d.x<480){mm+=.012;wet=clamp(wet+.0012,0,1);}else mmOut+=.012;if(Math.random()<.4){const r=free(rp);if(r){Object.assign(r,{on:true,x:d.x,t:0});r.e.setAttribute('visibility','visible');}}return;}
+d.e.setAttribute('opacity',vg?(.7*clamp((d.ev-d.y)/70,0,1)).toFixed(2):.7);const sl=d.vx/d.vy;d.e.setAttribute('x1',(d.x-sl*12).toFixed(1));d.e.setAttribute('y1',(d.y-12).toFixed(1));d.e.setAttribute('x2',d.x.toFixed(1));d.e.setAttribute('y2',d.y.toFixed(1));});
+rp.forEach(r=>{if(!r.on)return;r.t+=dt/.6;if(r.t>=1){r.on=false;r.e.setAttribute('visibility','hidden');return;}const rx=3+r.t*16;r.e.setAttribute('cx',r.x.toFixed(1));r.e.setAttribute('cy',402);r.e.setAttribute('rx',rx.toFixed(1));r.e.setAttribute('ry',(rx*.28).toFixed(1));r.e.setAttribute('opacity',(1-r.t).toFixed(2));});
+for(let i=0;i<3;i++)if(P[i].y<372){acc.t[i]+=dt*9;while(acc.t[i]>1){acc.t[i]--;const c=tr.find(z=>z.pl===i&&!z.on);if(!c)break;Object.assign(c,{on:true,x:P[i].x-6,y:P[i].y+11,vx:-S.w*.8-6-Math.random()*8,vy:8+Math.random()*10,age:0});c.e.setAttribute('visibility','visible');}}
+tr.forEach(c=>{if(!c.on)return;c.age+=dt;if(c.age>2.6){c.on=false;c.e.setAttribute('visibility','hidden');return;}c.x+=c.vx*dt;c.y+=c.vy*dt;c.e.setAttribute('cx',c.x.toFixed(1));c.e.setAttribute('cy',c.y.toFixed(1));c.e.setAttribute('opacity',(1-c.age/2.6).toFixed(2));});
+pe.forEach((e,i)=>{e.setAttribute('transform','translate('+P[i].x.toFixed(1)+','+P[i].y.toFixed(1)+')');til[i]+=(clamp((P[i].y-prev[i].y)*6,-25,25)-til[i])*.2;prev[i].y=P[i].y;pp[i].setAttribute('transform','rotate('+til[i].toFixed(1)+') scale(1.4)');
+const alt=Math.max(0,Math.round((G-P[i].y)/K/10)*10);if(alt!==altv[i]){altv[i]=alt;altT[i].textContent=(i+1)+' · '+fmt(alt)+' ฟุต';}
+const air=P[i].y<372;gear[i].setAttribute('visibility',air?'hidden':'visible');bk[i].setAttribute('opacity',Math.sin(tm*6+i)>.6?1:.15);
+const sc=air?Math.cos(tm*40+i):.6;bls[i].forEach(o=>o.l.setAttribute('transform','translate('+o.x+','+o.y+') scale(1,'+sc.toFixed(2)+') translate('+(-o.x)+','+(-o.y)+')'));
+gd[i].setAttribute('x1',P[i].x);gd[i].setAttribute('x2',P[i].x);gd[i].setAttribute('y1',P[i].y+22);gd[i].setAttribute('y2',398);gd[i].setAttribute('visibility',air?'visible':'hidden');
+swd[i].setAttribute('cx',P[i].x);swd[i].setAttribute('cy',402);swd[i].setAttribute('fill-opacity',(.28*(1-Math.min(1,alt/9000))).toFixed(2));swd[i].setAttribute('rx',(24-Math.min(10,alt/900)).toFixed(1));
+tele(i,q,g);});
+let out='ยังไม่ได้เริ่ม',hint=SCD[SC];
+if(collapsed){out='ล้มเหลว: เมฆสลายตัวก่อนขั้นโจมตี';hint='ปฏิบัติการช้าเกินไป กระแสลมกดลงทำให้เมฆแตกกระจาย ต้องเริ่มใหม่'}
+else if(s[2]&&g<.95){out='ยังไม่เกิดผล';hint='โจมตีเร็วเกินไป เมฆยังโตไม่เต็มที่ ต้องทำขั้นที่ 1 และ 2 ก่อน'}
+else if(rainy){const tot=mm+mmOut,pc=tot>0?mm/tot:1;
+if(vg&&tot<.05){out='เกือบไม่ได้ผล: ฝนระเหยก่อนถึงพื้น';hint='อากาศใต้ฐานเมฆแห้ง หยดน้ำระเหยหมดระหว่างตก (virga)'}
+else if(pc<.35){out='ฝนตกนอกพื้นที่เป้าหมาย';hint='ลมพัดเมฆออกไป ในงานจริงต้องโปรยด้านต้นลมให้เมฆเคลื่อนมาตกในเป้าหมาย'}
+else if(pc<.7){out='สำเร็จบางส่วน';hint='ฝนตกในเป้าหมายบางส่วน ลมพัดเมฆเลยไปบางส่วน'}
+else{out='สำเร็จ: ฝนตกในพื้นที่เป้าหมาย';hint='เมฆโตและโจมตีได้ถูกจังหวะ'}}
+else if(s[0]||s[1]){out='กำลังดำเนินการ'}
+const st=rainy?'ฝนตก':g>.95?'เมฆโตเต็มที่':g>.5?'กำลังเติบโต':s[0]?'กำลังก่อตัว':'ยังไม่ก่อตัว';
+const topFt=Math.round((S.b+q.Hf*(g-.1)/.9)/50)*50;
+const key=st+s.join('')+sel+q.cold+Math.round(mm*10)+Math.round(mmOut*10)+S.b+S.h+S.w+out;
+if(key!==last){last=key;
+$('vS').textContent=st;$('vC').textContent=st;$('vB').textContent=S.b.toLocaleString('en-US')+' ฟุต';$('vT').textContent=(s[0]?topFt:S.b).toLocaleString('en-US')+' ฟุต';$('vR').textContent=mm.toFixed(1)+' มม.';
+$('oB').textContent=S.b.toLocaleString('en-US')+' ฟุต';$('oH').textContent=S.h+'%';$('oW').textContent=S.w+' กม./ชม.';
+$('vTe').textContent=(26-6.5*S.b*.0003048).toFixed(1)+'°C';
+$('sE').textContent='ผลลัพธ์: '+out;$('sF').textContent=hint;$('sD').textContent='สภาพเมฆ: '+st+(g>.5?(q.cold?' (เมฆเย็น)':' (เมฆอุ่น)'):'');
+for(let i=0;i<3;i++)$('st'+i).classList.toggle('on',sel===i||(sel<0&&false));
+if(sel>=0){$('sA').textContent='กำลังศึกษา: ขั้นตอนที่ '+(sel+1)+' '+STEPS[sel][0]+(s[sel]?' (วางตำแหน่งถูกต้อง)':'');$('sB').textContent='สารตัวอย่าง: '+STEPS[sel][2].replace(/^[^:]*: /,'');$('sC').textContent='หลักการ: '+STEPS[sel][3];}
+else{$('sA').textContent=s.some(x=>x)?'กำลังจำลอง':'ยังไม่ได้เริ่ม';}
 }
-
-// สร้างเครื่องบิน
-function drawPlanes() {
-  $("aircraftLayer").innerHTML="";
-
-  state.planes.forEach((p,i)=>{
-    const g=svg("g",{
-      class:"aircraft",
-      "data-index":i,
-      transform:`translate(${p.x} ${p.y})`
-    },$("aircraftLayer"));
-
-    svg("circle",{
-      cx:0,cy:0,r:35,fill:"transparent"
-    },g);
-
-    svg("path",{
-      d:"M-27 0 L-8 -5 L3 -22 L10 -22 L8 -5 L27 0 L8 5 L10 17 L4 17 L-7 5 Z",
-      fill:["#f0a52e","#2386c7","#8967c8"][i],
-      stroke:"#16405f",
-      "stroke-width":2
-    },g);
-
-    svg("circle",{
-      cx:0,cy:-30,r:11,
-      fill:"white",stroke:"#17415f"
-    },g);
-
-    const txt=svg("text",{
-      x:0,y:-26,
-      "text-anchor":"middle",
-      fill:"#17344b",
-      "font-size":13,
-      "font-weight":700
-    },g);
-
-    txt.textContent=i+1;
-  });
-}
-
-// รองรับนิ้วและเมาส์
-const scene=$("scene");
-
-scene.addEventListener("pointerdown",e=>{
-  const plane=e.target.closest(".aircraft");
-  if(!plane)return;
-
-  state.dragging=Number(plane.dataset.index);
-
-  try {
-    scene.setPointerCapture(e.pointerId);
-  } catch(err) {}
-
-  e.preventDefault();
+requestAnimationFrame(frame);}
+function pt(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+const cx=x=>clamp(x,VX+30,VX+VW-30),cy=y=>clamp(y,40,382);
+pe.forEach((el,i)=>{
+el.addEventListener('pointerdown',e=>{drag=i;token++;sel=i;last='';el.setPointerCapture(e.pointerId);e.preventDefault();});
+el.addEventListener('pointermove',e=>{if(drag!==i)return;const q=pt(e);P[i].x=cx(q.x);P[i].y=cy(q.y);});
+['pointerup','pointercancel'].forEach(n=>el.addEventListener(n,()=>{drag=-1;}));
+el.addEventListener('keydown',e=>{const n=e.shiftKey?1:8,d={ArrowUp:[0,-n],ArrowDown:[0,n],ArrowLeft:[-n,0],ArrowRight:[n,0]}[e.key];if(!d)return;e.preventDefault();token++;P[i].x=cx(P[i].x+d[0]);P[i].y=cy(P[i].y+d[1]);});
 });
-
-scene.addEventListener("pointermove",e=>{
-  if(state.dragging===null)return;
-
-  const pt=scene.createSVGPoint();
-  pt.x=e.clientX;
-  pt.y=e.clientY;
-
-  const pos=pt.matrixTransform(scene.getScreenCTM().inverse());
-
-  const i=state.dragging;
-  const p=state.planes[i];
-
-  p.x=clamp(pos.x,35,865);
-  p.y=clamp(pos.y,70,445);
-
-  const el=$("aircraftLayer").querySelector(
-    `[data-index="${i}"]`
-  );
-
-  if(el) {
-    el.setAttribute("transform",`translate(${p.x} ${p.y})`);
-  }
-
-  checkPlane(i);
-  e.preventDefault();
-});
-
-function stopDrag() {
-  state.dragging=null;
-}
-
-scene.addEventListener("pointerup",stopDrag);
-scene.addEventListener("pointercancel",stopDrag);
-scene.addEventListener("lostpointercapture",stopDrag);
-
-// ตรวจสอบตำแหน่ง
-function checkPlane(i) {
-  if(i!==state.stage)return;
-
-  const p=state.planes[i];
-  const t=targets[i];
-
-  if(Math.hypot(p.x-t.x,p.y-t.y)<t.r) {
-    setStage(i+1);
-  }
-}
-
-// เปลี่ยนขั้นตอน
-function setStage(n) {
-  state.stage=clamp(n,0,3);
-  state.growth=Math.max(state.growth,[0,.3,.68,1][state.stage]);
-
-  // เริ่มนับการปล่อยละอองใหม่
-  state.emitTimer=0;
-
-  updateUI();
-
-  if(state.stage===3) {
-    $("message").textContent="ครบทั้ง 3 ขั้นตอนแล้ว กำลังประเมินเงื่อนไขการเกิดฝน";
-  }
-}
-
-// ข้อมูล
-const data=[
-  {
-    title:"ยังไม่ได้เริ่ม",
-    material:"สารตัวอย่าง: —",
-    role:"หลักการ: เลือกขั้นตอนเพื่อศึกษา",
-    cloud:"สภาพเมฆ: ยังไม่ก่อตัว"
-  },
-  {
-    title:"ขั้นที่ 1: ก่อกวน",
-    material:"สารตัวอย่าง: โซเดียมคลอไรด์ (NaCl)",
-    role:"หลักการ: แนวคิดการเพิ่มแกนควบแน่นในเมฆ",
-    cloud:"สภาพเมฆ: เริ่มก่อตัว"
-  },
-  {
-    title:"ขั้นที่ 2: เลี้ยงให้อ้วน",
-    material:"สารตัวอย่าง: สารดูดความชื้น เช่น CaCl₂",
-    role:"หลักการ: ศึกษาการพัฒนาของเมฆและหยดน้ำ",
-    cloud:"สภาพเมฆ: กำลังเติบโต"
-  },
-  {
-    title:"ขั้นที่ 3: โจมตี",
-    material:"แนวคิด: กระบวนการเมฆอุ่นหรือเมฆเย็น",
-    role:"หลักการ: ส่งเสริมการรวมตัวของหยดน้ำหรือผลึกน้ำแข็ง",
-    cloud:"สภาพเมฆ: พัฒนาเต็มที่"
-  }
-];
-
-function updateUI() {
-  const d=data[state.stage];
-
-  $("scienceTitle").textContent=d.title;
-  $("scienceMaterial").textContent=d.material;
-  $("scienceRole").textContent=d.role;
-  $("scienceCloud").textContent=d.cloud;
-
-  for(let i=1;i<=3;i++) {
-    $("card"+i).classList.toggle("active",state.stage===i);
-  }
-
-  $("cloudType").textContent=[
-    "ยังไม่ก่อตัว",
-    "เริ่มก่อตัว",
-    "กำลังเติบโต",
-    "เมฆพัฒนาเต็มที่"
-  ][state.stage];
-
-  $("cloudStatus").textContent=[
-    "ยังไม่ก่อตัว",
-    "เริ่มก่อตัว",
-    "กำลังเติบโต",
-    "เมฆพัฒนาเต็มที่"
-  ][state.stage];
-}
-
-// แถบปรับค่า
-function updateSettings() {
-  state.base=Number($("baseInput").value);
-  state.humidity=Number($("humidityInput").value);
-  state.wind=Number($("windInput").value);
-
-  $("baseValue").textContent=state.base.toLocaleString()+" ฟุต";
-  $("baseRead").textContent=state.base.toLocaleString()+" ฟุต";
-  $("humidityValue").textContent=state.humidity+"%";
-  $("windValue").textContent=state.wind+" กม./ชม.";
-
-  $("temperature").textContent=
-    (29-(state.base-3000)*.0015).toFixed(1)+"°C";
-}
-
-["baseInput","humidityInput","windInput"].forEach(id=>{
-  $(id).addEventListener("input",updateSettings);
-});
-
-// ปุ่มเลือกขั้นตอน
-document.querySelectorAll("[data-stage]").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    stopAuto();
-    setStage(Number(btn.dataset.stage));
-  });
-});
-
-// สร้างฝน
-function addRain() {
-  const x=300+Math.random()*300;
-  const y=190+Math.random()*40;
-
-  const el=svg("line",{
-    x1:x,y1:y,x2:x-4,y2:y+15,
-    stroke:"#168bd0",
-    "stroke-width":2,
-    opacity:.8
-  },$("rainLayer"));
-
-  state.drops.push({
-    el,x,y,v:170+Math.random()*120
-  });
-
-  if(state.drops.length>120) {
-    state.drops.shift().el.remove();
-  }
-}
-
-// =======================================
-// ระบบละอองจำลองจากเครื่องบิน
-// =======================================
-
-function emitParticles() {
-
-  // ปล่อยละอองเฉพาะเมื่อเลือกขั้นตอน 1-3
-  if(state.stage<1 || state.stage>3) return;
-
-  const plane=state.planes[state.stage-1];
-
-  if(!plane) return;
-
-  for(let i=0;i<4;i++) {
-
-    // จุดปล่อยละอองบริเวณท้ายเครื่องบิน
-    const x=plane.x-25+(Math.random()*5-2.5);
-    const y=plane.y+3+(Math.random()*5-2.5);
-
-    const size=1.5+Math.random()*2.5;
-
-    const colors=[
-      "#ffffff",
-      "#d9f2ff",
-      "#c5e6f5"
-    ];
-
-    const color=colors[
-      Math.floor(Math.random()*colors.length)
-    ];
-
-    const el=svg("circle",{
-      cx:x,
-      cy:y,
-      r:size,
-      fill:color,
-      opacity:.9
-    },$("particleLayer"));
-
-    state.particles.push({
-      el,
-      x,
-      y,
-
-      // ความเร็วเริ่มต้น
-      vx:-15-Math.random()*25,
-      vy:15+Math.random()*25,
-
-      // แรงโน้มถ่วงจำลอง
-      gravity:8+Math.random()*12,
-
-      // อายุอนุภาค
-      life:0,
-      maxLife:1.5+Math.random()*1.5,
-
-      size
-    });
-  }
-
-  // จำกัดจำนวนอนุภาคเพื่อรักษาประสิทธิภาพ
-  while(state.particles.length>500) {
-    const old=state.particles.shift();
-    old.el.remove();
-  }
-}
-
-// อัปเดตการเคลื่อนที่ของละออง
-function updateParticles(dt) {
-
-  const wind=state.wind;
-
-  state.particles.forEach(p=>{
-
-    p.life+=dt;
-
-    // แรงลมพัดอนุภาค
-    p.vx+=wind*.12*dt;
-
-    // แรงโน้มถ่วง
-    p.vy+=p.gravity*dt;
-
-    // อัปเดตตำแหน่ง
-    p.x+=p.vx*dt;
-    p.y+=p.vy*dt;
-
-    // ค่อย ๆ จางหาย
-    const fade=Math.max(
-      0,
-      1-p.life/p.maxLife
-    );
-
-    p.el.setAttribute("cx",p.x);
-    p.el.setAttribute("cy",p.y);
-    p.el.setAttribute("opacity",fade);
-
-    // ขยายตัวเล็กน้อย
-    p.el.setAttribute(
-      "r",
-      p.size*(0.8+p.life*.25)
-    );
-  });
-
-  // ลบอนุภาคที่หมดอายุหรือออกนอกพื้นที่
-  state.particles=state.particles.filter(p=>{
-
-    const alive=
-      p.life<p.maxLife &&
-      p.x>-30 &&
-      p.x<930 &&
-      p.y<580;
-
-    if(!alive) {
-      p.el.remove();
-    }
-
-    return alive;
-  });
-}
-
-// วงจรภาพเคลื่อนไหว
-let previous=performance.now();
-let rainTimer=0;
-
-function frame(now) {
-  requestAnimationFrame(frame);
-
-  const dt=Math.min(.05,(now-previous)/1000);
-  previous=now;
-
-  if(state.paused)return;
-
-  // =================================
-  // ระบบสร้างละอองระหว่างจำลอง
-  // =================================
-
-  if(state.stage>0 && state.stage<4) {
-
-    state.emitTimer+=dt;
-
-    if(state.emitTimer>=.045) {
-      state.emitTimer=0;
-      emitParticles();
-    }
-  }
-
-  // อัปเดตละอองทุกเฟรม
-  updateParticles(dt);
-
-  const growthTargets=[0,.3,.68,1];
-
-  const target=growthTargets[state.stage];
-
-  state.growth+=(target-state.growth)*Math.min(1,dt*.65);
-
-  const scale=.48+state.growth*.58;
-
-  $("cloud").setAttribute(
-    "transform",
-    `translate(450 280) scale(${scale})`
-  );
-
-  const top=state.base+state.growth*9000;
-
-  $("topRead").textContent=Math.round(top).toLocaleString()+" ฟุต";
-
-  const canRain=
-    state.stage===3 &&
-    state.humidity>=60 &&
-    state.growth>.8;
-
-  if(canRain) {
-    state.rain=Math.min(100,state.rain+dt*.8);
-
-    rainTimer+=dt;
-
-    if(rainTimer>.07) {
-      rainTimer=0;
-      addRain();
-    }
-
-    $("green").setAttribute("opacity",Math.min(.8,state.rain/90));
-    $("pond").setAttribute("opacity",.4+state.rain/150);
-
-  }
-
-  state.drops.forEach(d=>{
-    d.y+=d.v*dt;
-    d.x-=state.wind*.12*dt;
-
-    d.el.setAttribute("x1",d.x);
-    d.el.setAttribute("y1",d.y);
-    d.el.setAttribute("x2",d.x-4);
-    d.el.setAttribute("y2",d.y+15);
-
-    if(d.y>480) {
-      d.dead=true;
-      d.el.remove();
-    }
-  });
-
-  state.drops=state.drops.filter(d=>!d.dead);
-
-  $("rainRead").textContent=state.rain.toFixed(1)+" มม.";
-
-  if(state.stage===3 && !canRain) {
-    $("cloudStatus").textContent="เมฆพัฒนาแล้ว แต่ความชื้นยังไม่เพียงพอ";
-  } else if(canRain) {
-    $("cloudStatus").textContent="กำลังเกิดฝนจำลอง";
-  }
-
-}
-
-// ระบบอัตโนมัติ
-function wait(ms,id) {
-  return new Promise(resolve=>{
-    const start=performance.now();
-
-    function check(now) {
-      if(id!==state.autoId) {
-        resolve(false);
-        return;
-      }
-
-      if(state.paused) {
-        requestAnimationFrame(check);
-        return;
-      }
-
-      if(now-start>=ms) {
-        resolve(true);
-      } else {
-        requestAnimationFrame(check);
-      }
-    }
-
-    requestAnimationFrame(check);
-  });
-}
-
-function stopAuto() {
-  state.autoId++;
-  state.auto=false;
-  $("autoBtn").disabled=false;
-}
-
-$("autoBtn").addEventListener("click",async()=>{
-  stopAuto();
-
-  const id=state.autoId;
-  state.auto=true;
-  state.autoId=id+1;
-
-  const current=state.autoId;
-
-  $("autoBtn").disabled=true;
-
-  setStage(1);
-  if(!await wait(1800,current))return;
-
-  setStage(2);
-  if(!await wait(1800,current))return;
-
-  setStage(3);
-
-  $("message").textContent="จำลองครบทุกขั้นตอนแล้ว";
-  state.auto=false;
-  $("autoBtn").disabled=false;
-});
-
-$("pauseBtn").addEventListener("click",()=>{
-  state.paused=!state.paused;
-
-  $("pauseBtn").textContent=
-    state.paused?"▶ เล่นต่อ":"Ⅱ หยุด";
-});
-
-$("resetBtn").addEventListener("click",()=>{
-  stopAuto();
-
-  state.paused=false;
-  state.stage=0;
-  state.growth=0;
-  state.rain=0;
-
-  state.drops.forEach(d=>d.el.remove());
-  state.drops=[];
-
-  // ล้างละอองทั้งหมด
-  state.particles.forEach(p=>p.el.remove());
-  state.particles=[];
-
-  state.emitTimer=0;
-
-  $("green").setAttribute("opacity",0);
-  $("pond").setAttribute("opacity",1);
-
-  $("rainLayer").innerHTML="";
-  $("particleLayer").innerHTML="";
-
-  state.planes=[
-    {x:180,y:360},
-    {x:350,y:360},
-    {x:520,y:360}
-  ];
-
-  $("pauseBtn").textContent="Ⅱ หยุด";
-  $("message").textContent="รีเซ็ตระบบแล้ว";
-
-  drawPlanes();
-  updateUI();
-});
-
-// โหมดมืด
-$("themeBtn").addEventListener("click",()=>{
-  const root=document.documentElement;
-
-  root.dataset.theme=
-    root.dataset.theme==="dark"?"light":"dark";
-
-  $("themeBtn").textContent=
-    root.dataset.theme==="dark"?"☀️ โหมดสว่าง":"🌙 โหมดมืด";
-
-  try {
-    localStorage.setItem("rain-theme",root.dataset.theme);
-  } catch(e) {}
-});
-
-try {
-  const saved=localStorage.getItem("rain-theme");
-
-  if(saved==="dark") {
-    document.documentElement.dataset.theme="dark";
-    $("themeBtn").textContent="☀️ โหมดสว่าง";
-  }
-} catch(e) {}
-
-// เต็มจอ
-$("fullBtn").addEventListener("click",async()=>{
-  try {
-    if(!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen();
-    } else {
-      await document.exitFullscreen();
-    }
-  } catch(e) {
-    $("message").textContent="เบราว์เซอร์ไม่รองรับการเปิดเต็มจอ";
-  }
-});
-
-document.addEventListener("fullscreenchange",()=>{
-  $("fullBtn").textContent=
-    document.fullscreenElement?"✕ ออกจากเต็มจอ":"⛶ เต็มจอ";
-});
-
-// เริ่มต้น
-drawPlanes();
-updateUI();
-updateSettings();
+[['rB','b'],['rH','h'],['rW','w']].forEach(([id,k])=>$(id).addEventListener('input',e=>{S[k]=Number(e.target.value);}));
+function mv(i,x,y,ms,tk){return new Promise(r=>{const a=P[i].x,b=P[i].y,t0=performance.now();(function f(t){if(tk!==token){r();return;}const k=Math.min(1,(t-t0)/ms),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;P[i].x=a+(x-a)*e;P[i].y=b+(y-b)*e;k<1?requestAnimationFrame(f):r();})(t0);});}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function home(){token++;const tk=token;mm=0;mmOut=0;wet=0;dx=0;fullT=0;collapsed=false;sel=-1;last='';return Promise.all(HOME.map((h,i)=>mv(i,h.x,h.y,700,tk)));}
+$('reset').onclick=home;
+$('rS').onchange=e=>{SC=e.target.value;const v={n:[12,65,5000],w:[38,65,5000],d:[8,35,5500],c:[12,65,5000]}[SC];S.w=v[0];S.h=v[1];S.b=v[2];$('rW').value=S.w;$('rH').value=S.h;$('rB').value=S.b;home();};
+$('stop').onclick=()=>{token++;};
+$('auto').onclick=async()=>{await home();token++;const tk=token;await wait(300);const run=async(i,ms,w)=>{if(tk!==token)return;sel=i;last='';const t=target(i);await mv(i,t.x,t.y,ms,tk);await wait(w);};await run(0,1300,2000);await run(1,1300,2400);await run(2,1600,0);};
 requestAnimationFrame(frame);
-
 </script>
 </body>
-      </html>
+</html>
